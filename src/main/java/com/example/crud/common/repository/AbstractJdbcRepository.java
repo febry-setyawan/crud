@@ -58,8 +58,7 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
     public Optional<T> findById(ID id) {
         return TimerUtil.time("findById", () -> {
             String sql = "SELECT * FROM %s WHERE %s = :id".formatted(getTableName(), getIdColumnName());
-            log.debug("Execute Query : {}", sql);
-            log.debug("Parameter Query : {}", id);
+            logQuery(sql, null);
             return jdbcClient.sql(sql)
                     .param("id", id)
                     .query(getRowMapper())
@@ -78,8 +77,7 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
                 countSql.append(" WHERE ").append(whereClause);
             }
             
-            log.debug("Execute Query : {}", countSql);
-            log.debug("Parameter Query : {}", filters);
+            logQuery(getIdColumnName(), filters);
             Long totalElements = jdbcClient.sql(countSql.toString())
                                         .params(filters)
                                         .query(Long.class)
@@ -105,8 +103,7 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
             queryParams.put("limit", pageable.getPageSize());
             queryParams.put("offset", pageable.getOffset());
 
-            log.debug("Execute Query : {}", dataSql);
-            log.debug("Parameter Query : {}", queryParams);
+            logQuery(sortClause, queryParams);
             List<T> content = jdbcClient.sql(dataSql.toString())
                                         .params(queryParams)
                                         .query(getRowMapper())
@@ -153,8 +150,7 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
             Map<String, Object> params = getUpdateParameters(entity);
             params.put("id", entity.getId());
 
-            log.debug("Execute Query : {}", sql);
-            log.debug("Parameter Query : {}", params);
+            logQuery(sql, params);
             return jdbcClient.sql(sql)
                     .params(params)
                     .update();
@@ -165,11 +161,17 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
     public int deleteById(ID id) {
         return TimerUtil.time("deleteById", () -> {
             String sql = "DELETE FROM %s WHERE %s = :id".formatted(getTableName(), getIdColumnName());
-            log.debug("Execute Query : {}", sql);
-            log.debug("Parameter Query : {}", id);
+            logQuery(sql, null);
             return jdbcClient.sql(sql)
                     .param("id", id)
                     .update();
         });
+    }
+
+    private void logQuery(String sql, Map<String, Object> params) {
+        log.debug("Execute Query : {}", sql);
+        if (params != null && !params.isEmpty()) {
+            log.debug("Parameter Query : {}", params);
+        }
     }
 }

@@ -4,9 +4,9 @@ import com.example.crud.common.model.Auditable;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-// import org.springframework.security.core.context.SecurityContextHolder;
-// import org.springframework.security.core.Authentication;
 
 import java.time.LocalDateTime;
 
@@ -52,13 +52,10 @@ public class AuditTrailAspect {
      */
     private String getCurrentUsername() {
         // --- Implementasi Real dengan Spring Security ---
-        // Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        // if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
-        //     return "SYSTEM";
-        // }
-        // return authentication.getName();
-        
-        // --- Implementasi Sederhana untuk Demo ---
-        return "test-user";
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            return "SYSTEM";
+        }
+        return authentication.getName();
     }
 }
