@@ -11,6 +11,9 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import static org.springframework.security.config.Customizer.withDefaults;
+
+import java.security.SecureRandom;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,8 +42,7 @@ public class SecurityConfig {
     @Bean
     public InMemoryUserDetailsManager userDetailsService() {
         // Buat user sederhana di memori untuk testing
-        @SuppressWarnings("deprecation")
-        String password = RandomStringUtils.randomAlphanumeric(10);
+        String password = RandomStringUtils.random(20, 0, 0, true, true, null, new SecureRandom());
         log.debug("Generated password for user: {}", password);
         UserDetails user = User.withDefaultPasswordEncoder()
             .username("user")
