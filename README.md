@@ -13,6 +13,8 @@ Framework ini adalah sebuah proyek demonstrasi untuk membangun sistem CRUD (Crea
 -   **Audit Trail Otomatis**: Field `createdAt`, `createdBy`, `updatedAt`, dan `updatedBy` diisi secara otomatis menggunakan AOP.
 -   **DTO Pattern**: Memisahkan model internal dari request/response API untuk keamanan dan fleksibilitas.
 -   **Penanganan Error Terpusat**: Menggunakan `@ControllerAdvice` untuk respons error JSON yang konsisten.
+-   **Containerization**: Dilengkapi dengan **Dockerfile** dan **docker-compose.yml** untuk kemudahan setup dan deployment.
+-   **Performance Testing**: Menyertakan skrip dasar untuk *load testing* menggunakan **k6**.
 -   **Dokumentasi API**: Dokumentasi API interaktif dibuat secara otomatis menggunakan SpringDoc (Swagger UI).
 -   **Analisis Kualitas Kode**: Terintegrasi dengan SonarCloud untuk analisis statis dan laporan *test coverage*.
 -   **Unit & Integration Testing**: Cakupan testing yang tinggi untuk memastikan keandalan kode.
@@ -25,6 +27,7 @@ Framework ini adalah sebuah proyek demonstrasi untuk membangun sistem CRUD (Crea
 
 -   **Java 21**
 -   **Spring Boot 3.5.x**
+-   **Docker & Docker Compose**
 -   **Undertow** (sebagai embedded server)
 -   **Spring Data JDBC** (`JdbcClient`)
 -   **Spring AOP** untuk audit trail
@@ -40,6 +43,7 @@ Framework ini adalah sebuah proyek demonstrasi untuk membangun sistem CRUD (Crea
 -   **SpringDoc OpenAPI** untuk Swagger UI
 -   **SonarCloud** & **JaCoCo** untuk analisis kualitas kode
 -   **JUnit 5 & Mockito** untuk testing
+-   **k6** untuk *performance testing*
 
 ---
 
@@ -60,7 +64,7 @@ com.example.crud
 │       ├── controller   # UserController (REST API Layer)
 │       ├── dto          # DTO dan Mapper
 │       ├── model        # Entitas spesifik (User)
-│       ├── repository   # Repository spesifik (kelas implementasi)
+│       ├── repository   # Repository spesifik
 │       └── service      # Service Layer (Interface, Default & Resilient Impl)
 ├── util                 # Kelas utilitas (TimerUtil)
 └── CrudApplication.java # Kelas utama aplikasi
@@ -74,23 +78,34 @@ com.example.crud
 
 -   JDK 21 atau lebih baru
 -   Apache Maven
+-   Docker & Docker Compose
 
-### Langkah-langkah
+### Menjalankan dengan Docker Compose (Direkomendasikan)
+Cara ini akan menjalankan aplikasi beserta database PostgreSQL dalam kontainer.
 
-1.  **Clone repository ini:**
+1.  **Build & Jalankan Kontainer**:
+    Perintah ini akan membangun *image* aplikasi dan menjalankan semua layanan di latar belakang (`-d`).
     ```bash
-    git clone [URL_GITHUB_ANDA]
-    cd crud
+    docker-compose up -d --build
     ```
 
-2.  **Compile dan jalankan proyek menggunakan Maven:**
-    Aplikasi akan berjalan dengan profil `dev` secara default.
+2.  **Melihat Log Aplikasi**:
+    Untuk melihat log dari aplikasi Spring Boot Anda:
     ```bash
-    mvn spring-boot:run
+    docker-compose logs -f app
     ```
 
-3.  Aplikasi akan berjalan di port `8080`.
+3.  **Menghentikan Kontainer**:
+    Untuk menghentikan dan menghapus kontainer yang berjalan:
+    ```bash
+    docker-compose down
+    ```
 
+### Menjalankan Secara Lokal dengan Maven (Profil Dev)
+Cara ini akan menjalankan aplikasi dengan database H2 in-memory.
+```bash
+mvn spring-boot:run
+```
 ---
 
 ## Analisis Kualitas Kode (SonarCloud)
@@ -117,7 +132,7 @@ Setelah aplikasi berjalan, Anda dapat mengakses beberapa endpoint berikut:
 -   **Actuator Health Endpoint:**
     [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
 
--   **H2 Database Console (untuk melihat data):**
+-   **H2 Database Console (jika menggunakan profil dev):**
     [http://localhost:8080/h2-console](http://localhost:8080/h2-console)
     -   **JDBC URL**: `jdbc:h2:mem:testdb`
     -   **User Name**: `sa`
