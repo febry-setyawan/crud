@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
 @Import(UserRepositoryTest.TestRepoConfiguration.class)
-@Sql("/schema.sql")
+@Sql("/db/migration/V1__Create_users_table.sql")
 @WithMockUser("test-user")
 class UserRepositoryTest {
 
