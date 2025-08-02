@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -34,28 +35,28 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
     private UserMapper userMapper;
-    private UserService userService;
 
+    private UserService userService;
     private User user;
+    private UserResponseDto responseDto;
 
     @BeforeEach
     void setUp() {
-        // Gunakan implementasi asli dari MapStruct
-        userMapper = UserMapper.INSTANCE;
-        
-        // Buat instance service secara manual dengan mock repository dan mapper asli
         userService = new UserService(userRepository, userMapper);
-
         user = new User("Test User", "test@example.com");
         user.setId(1L);
+        responseDto = new UserResponseDto(1L, "Test User", "test@example.com");
     }
 
     @Test
     void createUser_shouldMapAndSave() {
 
         UserRequestDto requestDto = new UserRequestDto("Test User", "test@example.com");
-        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(userMapper.toEntity(any())).thenReturn(user);
+        when(userRepository.save(any())).thenReturn(user);
+        when(userMapper.toDto(user)).thenReturn(responseDto);
 
         // Act
         UserResponseDto result = userService.createUser(requestDto);
@@ -72,6 +73,7 @@ class UserServiceTest {
         // Arrange
         Page<User> userPage = new PageImpl<>(List.of(user));
         when(userRepository.findAll(any(), any(Map.class))).thenReturn(userPage);
+        when(userMapper.toDto(user)).thenReturn(responseDto);
 
         // Act
         // Gunakan new HashMap<>() bukan Map.of()
@@ -86,6 +88,7 @@ class UserServiceTest {
     void getUserById_whenUserExists_shouldReturnDto() {
         // Arrange
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userMapper.toDto(user)).thenReturn(new UserResponseDto(1L, "Test User", "test@example.com"));
 
         // Act
         UserResponseDto result = userService.getUserById(1L);

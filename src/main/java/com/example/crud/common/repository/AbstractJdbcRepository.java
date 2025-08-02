@@ -43,18 +43,6 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
                 .usingGeneratedKeyColumns(getIdColumnName());
     }
 
-    // @SuppressWarnings("unchecked")
-    // @Override
-    // public T save(T entity) {
-    //     // Aspect berjalan sebelum ini, mengisi field audit pada 'entity'
-    //     Map<String, Object> params = getUpdateParameters(entity);
-    //     Number newId = simpleJdbcInsert.executeAndReturnKey(params);
-        
-    //     // Jangan kembalikan objek lama, tapi cari dan kembalikan objek baru dari DB
-    //     return findById((ID) newId)
-    //             .orElseThrow(() -> new IllegalStateException("Could not find saved entity with id: " + newId));
-    // }
-
     @SuppressWarnings("unchecked")
     @Override
     public T save(T entity) {
@@ -65,17 +53,6 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
                     .orElseThrow(() -> new IllegalStateException("Could not find saved entity with id: " + newId));
         });
     }
-
-    // @Override
-    // public Optional<T> findById(ID id) {
-    //     String sql = "SELECT * FROM %s WHERE %s = :id".formatted(getTableName(), getIdColumnName());
-    //     log.debug("Execute Query : {}", sql);
-    //     log.debug("Parameter Query : {}", id);
-    //     return jdbcClient.sql(sql)
-    //             .param("id", id)
-    //             .query(getRowMapper())
-    //             .optional();
-    // }
 
     @Override
     public Optional<T> findById(ID id) {
@@ -90,6 +67,7 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
         });
     }
 
+    @SuppressWarnings("null")
     @Override
     public Page<T> findAll(Pageable pageable, Map<String, Object> filters) {
         return TimerUtil.time("findAll", () -> {
