@@ -9,6 +9,10 @@ public class TimerUtil {
 
     private static final Logger log = LoggerFactory.getLogger(TimerUtil.class);
 
+    private TimerUtil() {
+        throw new IllegalStateException("Utility class");
+    }
+
     /**
      * Mengukur waktu eksekusi sebuah Supplier (aksi yang mengembalikan nilai).
      * @param actionName Nama aksi untuk logging.
