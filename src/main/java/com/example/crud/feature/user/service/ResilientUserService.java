@@ -12,9 +12,14 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 @Primary
 public class ResilientUserService implements UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(ResilientUserService.class);
 
     private final UserService delegate;
 
@@ -49,16 +54,13 @@ public class ResilientUserService implements UserService {
         return delegate.deleteUser(id);
     }
 
-    // --- Fallback Methods ---
-    // Dipanggil saat circuit breaker terbuka
     private UserResponseDto fallbackGetUserById(Long id, Throwable t) {
-        // Log error dan kembalikan data default atau null
-        // log.error("Circuit breaker opened for getUserById: {}", id, t);
+        log.error("Circuit breaker opened for getUserById: {}", id, t);
         return new UserResponseDto(id, "Fallback User", "fallback@example.com");
     }
 
     private Page<UserResponseDto> fallbackGetAllUsers(Pageable pageable, Map<String, Object> filters, Throwable t) {
-        // log.error("Circuit breaker opened for getAllUsers", t);
+        log.error("Circuit breaker opened for getAllUsers", t);
         return new PageImpl<>(Collections.emptyList(), pageable, 0);
     }
 }
