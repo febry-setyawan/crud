@@ -34,6 +34,7 @@
 		<org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
 		<jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
 		<maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+		<resilience4j-spring-boot3.version>2.3.0</resilience4j-spring-boot3.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -87,6 +88,11 @@
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.github.resilience4j</groupId>
+			<artifactId>resilience4j-spring-boot3</artifactId>
+			<version>${resilience4j-spring-boot3.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>

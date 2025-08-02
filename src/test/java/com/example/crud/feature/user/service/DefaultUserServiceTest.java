@@ -29,7 +29,7 @@ import com.example.crud.common.exception.ResourceNotFoundException;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
-class UserServiceTest {
+class DefaultUserServiceTest {
 
     @Mock
     private UserRepository userRepository;
@@ -43,7 +43,7 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        userService = new UserService(userRepository, userMapper);
+        userService = new DefaultUserService(userRepository, userMapper);
         user = new User("Test User", "test@example.com");
         user.setId(1L);
         responseDto = new UserResponseDto(1L, "Test User", "test@example.com");
