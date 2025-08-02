@@ -8,7 +8,7 @@ Framework ini adalah sebuah proyek demonstrasi untuk membangun sistem CRUD (Crea
 -   **Clean Architecture**: Pemisahan yang jelas antara Controller, Service, Repository, dan Model.
 -   **Service Layer Decorator**: Menggunakan *Decorator Pattern* untuk menambahkan fungsionalitas secara transparan, seperti *Circuit Breaker*.
 -   **Resilience**: Terintegrasi dengan **Resilience4j** (*Circuit Breaker*) untuk meningkatkan ketahanan aplikasi terhadap kegagalan layanan.
--   **Pencarian & Pengurutan Dinamis**: Endpoint list mendukung filter dan sort dinamis.
+-   **Pencarian & Pengurutan Dinamis**: Endpoint list mendukung filter dinamis menggunakan DTO Filter.
 -   **Pagination**: Dukungan penuh untuk pagination menggunakan `Pageable` dari Spring Data.
 -   **Audit Trail Otomatis**: Field `createdAt`, `createdBy`, `updatedAt`, dan `updatedBy` diisi secara otomatis menggunakan AOP.
 -   **DTO Pattern**: Memisahkan model internal dari request/response API untuk keamanan dan fleksibilitas.
@@ -17,6 +17,7 @@ Framework ini adalah sebuah proyek demonstrasi untuk membangun sistem CRUD (Crea
 -   **Analisis Kualitas Kode**: Terintegrasi dengan SonarCloud untuk analisis statis dan laporan *test coverage*.
 -   **Unit & Integration Testing**: Cakupan testing yang tinggi untuk memastikan keandalan kode.
 -   **Monitoring**: Dilengkapi dengan endpoint monitoring dasar dari Spring Boot Actuator.
+-   **Caching**: Implementasi cache *in-memory* dengan TTL menggunakan Caffeine.
 
 ---
 
@@ -29,7 +30,7 @@ Framework ini adalah sebuah proyek demonstrasi untuk membangun sistem CRUD (Crea
 -   **Spring AOP** untuk audit trail
 -   **Spring Boot Actuator** untuk monitoring
 -   **Spring Security** untuk otentikasi dasar
--   **Spring Cache** untuk *caching*
+-   **Spring Cache** & **Caffeine** untuk *caching*
 -   **Resilience4j** untuk *Circuit Breaker*
 -   **Flyway** untuk migrasi database
 -   **SLF4J & Logback** untuk logging
@@ -59,7 +60,7 @@ com.example.crud
 │       ├── controller   # UserController (REST API Layer)
 │       ├── dto          # DTO dan Mapper
 │       ├── model        # Entitas spesifik (User)
-│       ├── repository   # Repository spesifik
+│       ├── repository   # Repository spesifik (kelas implementasi)
 │       └── service      # Service Layer (Interface, Default & Resilient Impl)
 ├── util                 # Kelas utilitas (TimerUtil)
 └── CrudApplication.java # Kelas utama aplikasi

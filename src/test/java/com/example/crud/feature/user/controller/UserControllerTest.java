@@ -3,6 +3,7 @@ package com.example.crud.feature.user.controller;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import com.example.crud.common.exception.ResourceNotFoundException;
 import com.example.crud.feature.role.dto.RoleResponseDto; // <-- Import Role DTO
+import com.example.crud.feature.user.dto.UserFilterDto;
 import com.example.crud.feature.user.dto.UserRequestDto;
 import com.example.crud.feature.user.dto.UserResponseDto;
 import com.example.crud.feature.user.service.UserService;
@@ -38,17 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.security.test.context.support.WithMockUser;
 
-@WebMvcTest(
-    controllers = UserController.class,
-    excludeAutoConfiguration = {
-        DataSourceAutoConfiguration.class,
-        DataSourceTransactionManagerAutoConfiguration.class,
-        JdbcRepositoriesAutoConfiguration.class,
-        JdbcTemplateAutoConfiguration.class,
-        SqlInitializationAutoConfiguration.class,
-        AopAutoConfiguration.class
-    }
-)
+@WebMvcTest(controllers = UserController.class)
 @WithMockUser(username = "testuser", roles = "USER")
 class UserControllerTest {
 
@@ -80,7 +71,7 @@ class UserControllerTest {
 
         // --- Definisikan Perilaku Mock untuk Setiap Skenario ---
         when(userService.createUser(any(UserRequestDto.class))).thenReturn(userResponseDto);
-        when(userService.getAllUsers(any(Pageable.class), anyMap())).thenReturn(userPage);
+        when(userService.getAllUsers(any(Pageable.class), any(UserFilterDto.class))).thenReturn(userPage);
         when(userService.getUserById(1L)).thenReturn(userResponseDto);
         when(userService.updateUser(eq(1L), any(UserRequestDto.class))).thenReturn(updatedUserResponseDto);
         when(userService.deleteUser(1L)).thenReturn(true);

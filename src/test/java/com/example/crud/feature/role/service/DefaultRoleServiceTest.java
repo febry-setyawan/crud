@@ -1,6 +1,7 @@
 package com.example.crud.feature.role.service;
 
 import com.example.crud.common.exception.ResourceNotFoundException;
+import com.example.crud.feature.role.dto.RoleFilterDto;
 import com.example.crud.feature.role.dto.RoleMapper;
 import com.example.crud.feature.role.dto.RoleRequestDto;
 import com.example.crud.feature.role.dto.RoleResponseDto;
@@ -10,13 +11,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,12 +41,55 @@ class DefaultRoleServiceTest {
     private Role role;
     private RoleResponseDto responseDto;
 
+    @Captor
+    private ArgumentCaptor<Map<String, Object>> mapCaptor;
+
     @BeforeEach
     void setUp() {
         roleService = new DefaultRoleService(roleRepository, roleMapper);
         role = new Role("ADMIN", "Admin role");
         role.setId(1L);
         responseDto = new RoleResponseDto(1L, "ADMIN", "Admin role");
+    }
+
+    @Test
+    void getAllRoles_withFilter_shouldBuildMapWithWildcardsAndCallRepository() {
+        // Arrange
+        RoleFilterDto filterDto = new RoleFilterDto();
+        filterDto.setName("admin"); // Filter dengan 'admin'
+
+        Page<Role> rolePage = new PageImpl<>(List.of(role));
+        when(roleRepository.findAll(any(), any(Map.class))).thenReturn(rolePage);
+        when(roleMapper.toDto(any(Role.class))).thenReturn(responseDto);
+
+        // Act
+        roleService.getAllRoles(PageRequest.of(0, 1), filterDto);
+
+        // Assert
+        // Verifikasi bahwa service membangun Map dengan benar sebelum memanggil repository
+        verify(roleRepository).findAll(any(), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+
+        // Pastikan service menambahkan wildcard '%' untuk pencarian LIKE
+        assertThat(capturedMap).hasSize(1);
+        assertThat(capturedMap.get("name")).isEqualTo("%admin%");
+    }
+
+    @Test
+    void getAllRoles_withNoFilter_shouldCallRepositoryWithEmptyMap() {
+        // Arrange
+        RoleFilterDto emptyFilter = new RoleFilterDto(); // DTO filter kosong
+        Page<Role> rolePage = new PageImpl<>(List.of(role));
+        when(roleRepository.findAll(any(), any(Map.class))).thenReturn(rolePage);
+        when(roleMapper.toDto(any(Role.class))).thenReturn(responseDto);
+
+        // Act
+        roleService.getAllRoles(PageRequest.of(0, 1), emptyFilter);
+
+        // Assert
+        verify(roleRepository).findAll(any(), mapCaptor.capture());
+        // Pastikan map yang dikirim ke repository kosong
+        assertThat(mapCaptor.getValue()).isEmpty();
     }
 
     @Test
@@ -63,21 +107,6 @@ class DefaultRoleServiceTest {
         assertThat(result.id()).isEqualTo(1L);
         assertThat(result.name()).isEqualTo("ADMIN");
         verify(roleRepository).save(any(Role.class));
-    }
-
-    @Test
-    void getAllRoles_shouldFetchPageAndMapToDto() {
-        // Arrange
-        Page<Role> rolePage = new PageImpl<>(List.of(role));
-        when(roleRepository.findAll(any(), any(Map.class))).thenReturn(rolePage);
-        when(roleMapper.toDto(any(Role.class))).thenReturn(responseDto);
-
-        // Act
-        Page<RoleResponseDto> resultPage = roleService.getAllRoles(PageRequest.of(0, 1), new HashMap<>());
-
-        // Assert
-        assertThat(resultPage.getContent()).hasSize(1);
-        assertThat(resultPage.getContent().get(0).name()).isEqualTo("ADMIN");
     }
 
     @Test

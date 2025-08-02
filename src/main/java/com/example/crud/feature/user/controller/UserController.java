@@ -1,6 +1,7 @@
 package com.example.crud.feature.user.controller;
 
 import com.example.crud.feature.user.service.UserService;
+import com.example.crud.feature.user.dto.UserFilterDto;
 import com.example.crud.feature.user.dto.UserRequestDto;
 import com.example.crud.feature.user.dto.UserResponseDto;
 
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -44,8 +46,12 @@ public class UserController {
     @Operation(summary = "Menampilkan semua user", description = "Mengambil daftar semua user dengan opsi filter, sort, dan pagination.")
     @PageableAsQueryParam 
     @GetMapping
-    public ResponseEntity<Page<UserResponseDto>> getAllUsers(Pageable pageable, @RequestParam(required = false) Map<String, Object> allParams) {
-        Page<UserResponseDto> page = userService.getAllUsers(pageable, allParams);
+    public ResponseEntity<Page<UserResponseDto>> getAllUsers(Pageable pageable, @RequestParam MultiValueMap<String, String> allParams) {
+        UserFilterDto filter = new UserFilterDto();
+        filter.setName(allParams.getFirst("name"));
+        filter.setEmail(allParams.getFirst("email"));
+
+        Page<UserResponseDto> page = userService.getAllUsers(pageable, filter);
         return ResponseEntity.ok(page);
     }
 

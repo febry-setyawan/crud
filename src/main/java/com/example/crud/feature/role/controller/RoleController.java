@@ -1,5 +1,6 @@
 package com.example.crud.feature.role.controller;
 
+import com.example.crud.feature.role.dto.RoleFilterDto;
 import com.example.crud.feature.role.dto.RoleRequestDto;
 import com.example.crud.feature.role.dto.RoleResponseDto;
 import com.example.crud.feature.role.service.RoleService;
@@ -14,9 +15,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/roles")
@@ -43,8 +43,12 @@ public class RoleController {
     @Operation(summary = "Menampilkan semua role", description = "Mengambil daftar semua role dengan opsi filter, sort, dan pagination.")
     @PageableAsQueryParam 
     @GetMapping
-    public ResponseEntity<Page<RoleResponseDto>> getAllRoles(Pageable pageable, @RequestParam(required = false) Map<String, Object> allParams) {
-        return ResponseEntity.ok(roleService.getAllRoles(pageable, allParams));
+    public ResponseEntity<Page<RoleResponseDto>> getAllRoles(Pageable pageable, @RequestParam MultiValueMap<String, String> allParams) {
+        RoleFilterDto filter = new RoleFilterDto();
+        filter.setName(allParams.getFirst("name"));
+        filter.setDescription(allParams.getFirst("description"));
+        
+        return ResponseEntity.ok(roleService.getAllRoles(pageable, filter));
     }
 
     @Operation(summary = "Menampilkan role berdasarkan ID", description = "Mengambil satu data role berdasarkan ID uniknya.")

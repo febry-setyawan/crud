@@ -1,6 +1,7 @@
 package com.example.crud.feature.role.controller;
 
 import com.example.crud.common.exception.ResourceNotFoundException;
+import com.example.crud.feature.role.dto.RoleFilterDto;
 import com.example.crud.feature.role.dto.RoleRequestDto;
 import com.example.crud.feature.role.dto.RoleResponseDto;
 import com.example.crud.feature.role.service.RoleService;
@@ -8,12 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.aop.AopAutoConfiguration;
-import org.springframework.boot.autoconfigure.data.jdbc.JdbcRepositoriesAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration;
-import org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
@@ -28,7 +23,6 @@ import java.util.List;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -36,17 +30,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(
-    controllers = RoleController.class,
-    excludeAutoConfiguration = {
-        DataSourceAutoConfiguration.class,
-        DataSourceTransactionManagerAutoConfiguration.class,
-        JdbcRepositoriesAutoConfiguration.class,
-        JdbcTemplateAutoConfiguration.class,
-        SqlInitializationAutoConfiguration.class,
-        AopAutoConfiguration.class
-    }
-)
+@WebMvcTest(controllers = RoleController.class)
 @WithMockUser
 class RoleControllerTest {
 
@@ -77,7 +61,7 @@ class RoleControllerTest {
 
         // Happy Path Scenarios
         when(roleService.createRole(any(RoleRequestDto.class))).thenReturn(roleResponseDto);
-        when(roleService.getAllRoles(any(Pageable.class), anyMap())).thenReturn(rolePage);
+        when(roleService.getAllRoles(any(Pageable.class), any(RoleFilterDto.class))).thenReturn(rolePage);
         when(roleService.getRoleById(1L)).thenReturn(roleResponseDto);
         when(roleService.updateRole(eq(1L), any(RoleRequestDto.class))).thenReturn(updatedRoleResponseDto);
         when(roleService.deleteRole(1L)).thenReturn(true);
@@ -101,7 +85,7 @@ class RoleControllerTest {
 
     @Test
     void getAllRoles_shouldReturnPageOfRoles() throws Exception {
-        mockMvc.perform(get("/api/roles?page=0&size=5"))
+        mockMvc.perform(get("/api/roles?page=0&size=5&name=ADMIN"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)))
                 .andExpect(jsonPath("$.content[0].id", is(1)));

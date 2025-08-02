@@ -98,7 +98,9 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> {
                 FROM users u
                 LEFT JOIN roles r ON u.role_id = r.id
                 WHERE u.id = :id
-            """;
+            """.stripIndent().trim();
+            Map<String, Object> params = Map.of("id", id);
+            logQuery(sql, params);
             return jdbcClient.sql(sql)
                     .param("id", id)
                     .query(getRowMapper())
@@ -106,6 +108,7 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> {
         });
     }
 
+    @SuppressWarnings("null")
     @Override
     public Page<User> findAll(Pageable pageable, Map<String, Object> filters) {
         return TimerUtil.time("findAll", () -> {
@@ -115,14 +118,14 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> {
                 String whereClause = buildWhereClause(filters, "u"); // Pass alias 'u'
                 countSql.append(" WHERE ").append(whereClause);
             }
+            logQuery(countSql.toString(), filters);
             Long totalElements = jdbcClient.sql(countSql.toString())
                                         .params(filters)
                                         .query(Long.class)
                                         .single();
 
-            // --- Data Query (This is the part to fix) ---
-            // DIUBAH: Gunakan query dengan JOIN dan alias
-            StringBuilder dataSql = new StringBuilder("""
+            // Gunakan query dengan JOIN dan alias
+            StringBuilder dataSql = new StringBuilder(("""
                 SELECT
                     u.id as user_id, u.name as user_name, u.email as user_email,
                     u.created_at as user_created_at, u.created_by as user_created_by,
@@ -130,7 +133,7 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> {
                     r.id as role_id, r.name as role_name, r.description as role_description
                 FROM users u
                 LEFT JOIN roles r ON u.role_id = r.id
-            """);
+            """).stripIndent().trim());
 
             if (filters != null && !filters.isEmpty()) {
                 String whereClause = buildWhereClause(filters, "u"); // Pass alias 'u'
@@ -148,6 +151,7 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> {
             queryParams.put("limit", pageable.getPageSize());
             queryParams.put("offset", pageable.getOffset());
 
+            logQuery(dataSql.toString(), queryParams);
             List<User> content = jdbcClient.sql(dataSql.toString())
                                         .params(queryParams)
                                         .query(getRowMapper())

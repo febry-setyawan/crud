@@ -2,6 +2,7 @@ package com.example.crud.feature.user.service;
 
 import com.example.crud.feature.role.model.Role;
 import com.example.crud.feature.role.repository.RoleRepository;
+import com.example.crud.feature.user.dto.UserFilterDto;
 import com.example.crud.feature.user.dto.UserMapper;
 import com.example.crud.feature.user.dto.UserRequestDto;
 import com.example.crud.feature.user.dto.UserResponseDto;
@@ -51,14 +52,17 @@ public class DefaultUserService implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
     }
     
-    public Page<UserResponseDto> getAllUsers(Pageable pageable, Map<String, Object> filters) {
-        Map<String, Object> mutableFilters = (filters != null) ? new HashMap<>(filters) : new HashMap<>();
+    public Page<UserResponseDto> getAllUsers(Pageable pageable, UserFilterDto filter) {
+        // Bangun map filter secara internal dari DTO
+        Map<String, Object> filters = new HashMap<>();
+        if (filter.getName() != null && !filter.getName().isBlank()) {
+            filters.put("name", "%" + filter.getName() + "%");
+        }
+        if (filter.getEmail() != null && !filter.getEmail().isBlank()) {
+            filters.put("description", "%" + filter.getEmail() + "%");
+        }
 
-        mutableFilters.remove("page");
-        mutableFilters.remove("size");
-        mutableFilters.remove("sort");
-
-        Page<User> userPage = userRepository.findAll(pageable, mutableFilters);
+        Page<User> userPage = userRepository.findAll(pageable, filters);
         return userPage.map(userMapper::toDto);
     }
 

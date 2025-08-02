@@ -1,6 +1,7 @@
 package com.example.crud.feature.role.service;
 
 import com.example.crud.common.exception.ResourceNotFoundException;
+import com.example.crud.feature.role.dto.RoleFilterDto;
 import com.example.crud.feature.role.dto.RoleMapper;
 import com.example.crud.feature.role.dto.RoleRequestDto;
 import com.example.crud.feature.role.dto.RoleResponseDto;
@@ -45,13 +46,17 @@ public class DefaultRoleService implements RoleService {
     }
 
     @Override
-    public Page<RoleResponseDto> getAllRoles(Pageable pageable, Map<String, Object> filters) {
-        Map<String, Object> mutableFilters = (filters != null) ? new HashMap<>(filters) : new HashMap<>();
-        mutableFilters.remove("page");
-        mutableFilters.remove("size");
-        mutableFilters.remove("sort");
+    public Page<RoleResponseDto> getAllRoles(Pageable pageable, RoleFilterDto filter) {
+        // Bangun map filter secara internal dari DTO
+        Map<String, Object> filters = new HashMap<>();
+        if (filter.getName() != null && !filter.getName().isBlank()) {
+            filters.put("name", "%" + filter.getName() + "%");
+        }
+        if (filter.getDescription() != null && !filter.getDescription().isBlank()) {
+            filters.put("description", "%" + filter.getDescription() + "%");
+        }
 
-        Page<Role> rolePage = roleRepository.findAll(pageable, mutableFilters);
+        Page<Role> rolePage = roleRepository.findAll(pageable, filters);
         return rolePage.map(roleMapper::toDto);
     }
 

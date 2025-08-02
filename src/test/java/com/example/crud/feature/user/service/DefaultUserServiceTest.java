@@ -1,8 +1,10 @@
 package com.example.crud.feature.user.service;
 
 import com.example.crud.common.exception.ResourceNotFoundException;
+import com.example.crud.feature.role.dto.RoleFilterDto;
 import com.example.crud.feature.role.model.Role;
 import com.example.crud.feature.role.repository.RoleRepository;
+import com.example.crud.feature.user.dto.UserFilterDto;
 import com.example.crud.feature.user.dto.UserMapper;
 import com.example.crud.feature.user.dto.UserRequestDto;
 import com.example.crud.feature.user.dto.UserResponseDto;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -26,6 +29,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,6 +51,9 @@ class DefaultUserServiceTest {
     private Role role;
     private UserResponseDto userResponseDto;
 
+    @Captor
+    private ArgumentCaptor<Map<String, Object>> mapCaptor;
+
     @BeforeEach
     void setUp() {
         // Inisialisasi service dengan semua mock
@@ -63,6 +70,46 @@ class DefaultUserServiceTest {
         // Siapkan DTO response
         // Di dunia nyata, mapper akan menangani ini, tapi untuk mock kita definisikan manual
         userResponseDto = new UserResponseDto(1L, "Test User", "test@example.com", null);
+    }
+
+    @Test
+    void getAllUsers_withFilter_shouldBuildMapWithWildcardsAndCallRepository() {
+        // Arrange
+        UserFilterDto filterDto = new UserFilterDto();
+        filterDto.setName("Test"); // Filter dengan 'Test'
+
+        Page<User> userPage = new PageImpl<>(List.of(user));
+        when(userRepository.findAll(any(), any(Map.class))).thenReturn(userPage);
+        when(userMapper.toDto(any(User.class))).thenReturn(userResponseDto);
+
+        // Act
+        userService.getAllUsers(PageRequest.of(0, 1), filterDto);
+
+        // Assert
+        // Verifikasi bahwa service membangun Map dengan benar sebelum memanggil repository
+        verify(userRepository).findAll(any(), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+
+        // Pastikan service menambahkan wildcard '%' untuk pencarian LIKE
+        assertThat(capturedMap).hasSize(1);
+        assertThat(capturedMap.get("name")).isEqualTo("%Test%");
+    }
+
+    @Test
+    void getAllUsers_withNoFilter_shouldCallRepositoryWithEmptyMap() {
+        // Arrange
+        UserFilterDto emptyFilter = new UserFilterDto(); // DTO filter kosong
+        Page<User> userPage = new PageImpl<>(List.of(user));
+        when(userRepository.findAll(any(), any(Map.class))).thenReturn(userPage);
+        when(userMapper.toDto(any(User.class))).thenReturn(userResponseDto);
+
+        // Act
+        userService.getAllUsers(PageRequest.of(0, 1), emptyFilter);
+
+        // Assert
+        verify(userRepository).findAll(any(), mapCaptor.capture());
+        // Pastikan map yang dikirim ke repository kosong
+        assertThat(mapCaptor.getValue()).isEmpty();
     }
 
     @Test
@@ -98,22 +145,6 @@ class DefaultUserServiceTest {
             userService.createUser(requestDto);
         });
         verify(userRepository, never()).save(any());
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    void getAllUsers_shouldFetchPageAndMapToDto() {
-        // Arrange
-        Page<User> userPage = new PageImpl<>(List.of(user));
-        when(userRepository.findAll(any(), any(Map.class))).thenReturn(userPage);
-        when(userMapper.toDto(any(User.class))).thenReturn(userResponseDto);
-
-        // Act
-        Page<UserResponseDto> resultPage = userService.getAllUsers(PageRequest.of(0, 1), new HashMap<>());
-
-        // Assert
-        assertThat(resultPage.getContent()).hasSize(1);
-        assertThat(resultPage.getContent().get(0).name()).isEqualTo("Test User");
     }
 
     @Test

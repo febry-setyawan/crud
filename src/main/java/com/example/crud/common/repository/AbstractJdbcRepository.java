@@ -58,7 +58,8 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
     public Optional<T> findById(ID id) {
         return TimerUtil.time("findById", () -> {
             String sql = "SELECT * FROM %s WHERE %s = :id".formatted(getTableName(), getIdColumnName());
-            logQuery(sql, null);
+            Map<String, Object> params = Map.of("id",id);
+            logQuery(sql, params);
             return jdbcClient.sql(sql)
                     .param("id", id)
                     .query(getRowMapper())
@@ -77,7 +78,7 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
                 countSql.append(" WHERE ").append(whereClause);
             }
             
-            logQuery(getIdColumnName(), filters);
+            logQuery(countSql.toString(), filters);
             Long totalElements = jdbcClient.sql(countSql.toString())
                                         .params(filters)
                                         .query(Long.class)
@@ -103,7 +104,7 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
             queryParams.put("limit", pageable.getPageSize());
             queryParams.put("offset", pageable.getOffset());
 
-            logQuery(sortClause, queryParams);
+            logQuery(dataSql.toString(), queryParams);
             List<T> content = jdbcClient.sql(dataSql.toString())
                                         .params(queryParams)
                                         .query(getRowMapper())
@@ -116,16 +117,34 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
 
     // --- Helper Methods ---
     protected String buildWhereClause(Map<String, Object> filters) {
-        return filters.keySet().stream()
-                .map(key -> "%s = :%s".formatted(key, key))
+        return filters.entrySet().stream()
+                .map(entry -> {
+                    String key = entry.getKey();
+                    Object value = entry.getValue();
+                    // Jika nilai adalah String dan mengandung '%', gunakan LIKE. Jika tidak, gunakan =.
+                    if (value instanceof String && value.toString().contains("%")) {
+                        return "%s LIKE :%s".formatted(key, key);
+                    } else {
+                        return "%s = :%s".formatted(key, key);
+                    }
+                })
                 .collect(Collectors.joining(" AND "));
     }
 
     protected String buildWhereClause(Map<String, Object> filters, String alias) {
-    return filters.keySet().stream()
-            .map(key -> "%s.%s = :%s".formatted(alias, key, key))
-            .collect(Collectors.joining(" AND "));
-}
+        return filters.entrySet().stream()
+                .map(entry -> {
+                    String key = entry.getKey();
+                    Object value = entry.getValue();
+                    // Jika nilai adalah String dan mengandung '%', gunakan LIKE. Jika tidak, gunakan =.
+                    if (value instanceof String && value.toString().contains("%")) {
+                        return "%s.%s LIKE :%s".formatted(alias, key, key);
+                    } else {
+                        return "%s.%s = :%s".formatted(alias, key, key);
+                    }
+                })
+                .collect(Collectors.joining(" AND "));
+    }
 
     protected String buildSortClause(Sort sort) {
         return sort.stream()
@@ -181,7 +200,8 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
     public int deleteById(ID id) {
         return TimerUtil.time("deleteById", () -> {
             String sql = "DELETE FROM %s WHERE %s = :id".formatted(getTableName(), getIdColumnName());
-            logQuery(sql, null);
+            Map<String, Object> params = Map.of("id", id);
+            logQuery(sql, params);
             return jdbcClient.sql(sql)
                     .param("id", id)
                     .update();
@@ -189,7 +209,7 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
     }
 
     protected void logQuery(String sql, Map<String, Object> params) {
-        log.debug("Execute Query : {}", sql);
+        log.trace("Execute Query : {}", sql);
         if (params != null && !params.isEmpty()) {
             log.debug("Parameter Query : {}", params);
         }

@@ -1,5 +1,6 @@
 package com.example.crud.feature.user.service;
 
+import com.example.crud.feature.user.dto.UserFilterDto;
 import com.example.crud.feature.user.dto.UserRequestDto;
 import com.example.crud.feature.user.dto.UserResponseDto;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -40,7 +41,7 @@ public class ResilientUserService implements UserService {
 
     @Override
     @CircuitBreaker(name = "userService", fallbackMethod = "fallbackGetAllUsers")
-    public Page<UserResponseDto> getAllUsers(Pageable pageable, Map<String, Object> filters) {
+    public Page<UserResponseDto> getAllUsers(Pageable pageable, UserFilterDto filters) {
         return delegate.getAllUsers(pageable, filters);
     }
 

@@ -1,5 +1,6 @@
 package com.example.crud.feature.role.service;
 
+import com.example.crud.feature.role.dto.RoleFilterDto;
 import com.example.crud.feature.role.dto.RoleRequestDto;
 import com.example.crud.feature.role.dto.RoleResponseDto;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -41,8 +42,8 @@ public class ResilientRoleService implements RoleService {
 
     @Override
     @CircuitBreaker(name = "roleService", fallbackMethod = "fallbackGetAllRoles")
-    public Page<RoleResponseDto> getAllRoles(Pageable pageable, Map<String, Object> filters) {
-        return delegate.getAllRoles(pageable, filters);
+    public Page<RoleResponseDto> getAllRoles(Pageable pageable, RoleFilterDto filter) {
+        return delegate.getAllRoles(pageable, filter);
     }
 
     @Override

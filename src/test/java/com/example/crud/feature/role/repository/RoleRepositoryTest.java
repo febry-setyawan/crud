@@ -20,7 +20,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
 @Import(RoleRepositoryTest.TestRepoConfiguration.class)
-@Sql("/db/migration/V2__Create_roles_table.sql")
+@Sql({
+    "/db/migration/V1__Create_users_table.sql",
+    "/db/migration/V2__Create_roles_table.sql",
+    "/db/migration/V3__Add_role_id_to_users_table.sql" 
+})
 class RoleRepositoryTest {
 
     @TestConfiguration
