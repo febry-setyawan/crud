@@ -51,7 +51,6 @@ public class AuditTrailAspect {
      * @return Nama pengguna saat ini atau "SYSTEM" jika tidak ditemukan.
      */
     private String getCurrentUsername() {
-        // --- Implementasi Real dengan Spring Security ---
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             return "SYSTEM";

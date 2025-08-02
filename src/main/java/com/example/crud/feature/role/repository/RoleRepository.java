@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 
 @Repository
-// Hapus "implements RoleRepository" dari sini
 public class RoleRepository extends AbstractJdbcRepository<Role, Long> {
 
     private static final RowMapper<Role> ROLE_ROW_MAPPER = (rs, rowNum) -> {
