@@ -1,5 +1,7 @@
 package com.example.crud.feature.user.service;
 
+import com.example.crud.feature.role.model.Role;
+import com.example.crud.feature.role.repository.RoleRepository;
 import com.example.crud.feature.user.dto.UserMapper;
 import com.example.crud.feature.user.dto.UserRequestDto;
 import com.example.crud.feature.user.dto.UserResponseDto;
@@ -21,16 +23,23 @@ import org.springframework.cache.annotation.Cacheable;
 public class DefaultUserService implements UserService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final UserMapper userMapper;
 
-    public DefaultUserService(UserRepository userRepository, UserMapper userMapper) {
+    public DefaultUserService(UserRepository userRepository, RoleRepository roleRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.userMapper = userMapper;
     }
 
     @Transactional
     public UserResponseDto createUser(UserRequestDto userDto) {
+        Role role = roleRepository.findById(userDto.roleId())
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + userDto.roleId()));
+                
         User user = userMapper.toEntity(userDto);
+        user.setRole(role);
+
         User savedUser = userRepository.save(user); // AOP audit trail tetap berjalan di sini
         return userMapper.toDto(savedUser);
     }
@@ -59,8 +68,14 @@ public class DefaultUserService implements UserService {
         User existingUser = userRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
+        // Validasi Role baru jika ada perubahan
+        Role role = roleRepository.findById(userDto.roleId())
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + userDto.roleId()));
+
         existingUser.setName(userDto.name());
         existingUser.setEmail(userDto.email());
+        existingUser.setRole(role); // Update Role
+        
         userRepository.update(existingUser);
         return userMapper.toDto(existingUser);
     }

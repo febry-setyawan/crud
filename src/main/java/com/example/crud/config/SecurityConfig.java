@@ -39,6 +39,7 @@ public class SecurityConfig {
         return http.build();
     }
 
+    @SuppressWarnings("deprecation")
     @Bean
     public InMemoryUserDetailsManager userDetailsService() {
         // Buat user sederhana di memori untuk testing

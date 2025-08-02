@@ -1,10 +1,12 @@
 package com.example.crud.feature.user.model;
 
 import com.example.crud.common.model.BaseEntityAuditable;
+import com.example.crud.feature.role.model.Role;
 
 public class User extends BaseEntityAuditable<Long> {
     private String name;
     private String email;
+    private Role role;
 
     // Constructors, Getters, Setters
     public User() {}
@@ -28,6 +30,14 @@ public class User extends BaseEntityAuditable<Long> {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 
 } 

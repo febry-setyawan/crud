@@ -1,5 +1,8 @@
 package com.example.crud.feature.user.service;
 
+import com.example.crud.common.exception.ResourceNotFoundException;
+import com.example.crud.feature.role.model.Role;
+import com.example.crud.feature.role.repository.RoleRepository;
 import com.example.crud.feature.user.dto.UserMapper;
 import com.example.crud.feature.user.dto.UserRequestDto;
 import com.example.crud.feature.user.dto.UserResponseDto;
@@ -21,12 +24,9 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import com.example.crud.common.exception.ResourceNotFoundException;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DefaultUserServiceTest {
@@ -35,35 +35,69 @@ class DefaultUserServiceTest {
     private UserRepository userRepository;
 
     @Mock
+    private RoleRepository roleRepository; // <-- Mock untuk RoleRepository
+
+    @Mock
     private UserMapper userMapper;
 
     private UserService userService;
+
+    // Objek data untuk testing
     private User user;
-    private UserResponseDto responseDto;
+    private Role role;
+    private UserResponseDto userResponseDto;
 
     @BeforeEach
     void setUp() {
-        userService = new DefaultUserService(userRepository, userMapper);
+        // Inisialisasi service dengan semua mock
+        userService = new DefaultUserService(userRepository, roleRepository, userMapper);
+
+        // Siapkan data Role dan User
+        role = new Role("ADMIN", "Administrator");
+        role.setId(1L);
+
         user = new User("Test User", "test@example.com");
         user.setId(1L);
-        responseDto = new UserResponseDto(1L, "Test User", "test@example.com");
+        user.setRole(role);
+
+        // Siapkan DTO response
+        // Di dunia nyata, mapper akan menangani ini, tapi untuk mock kita definisikan manual
+        userResponseDto = new UserResponseDto(1L, "Test User", "test@example.com", null);
     }
 
     @Test
-    void createUser_shouldMapAndSave() {
+    void createUser_whenRoleExists_shouldSaveUserWithRole() {
+        // Arrange
+        UserRequestDto requestDto = new UserRequestDto("Test User", "test@example.com", 1L);
+        User userToSave = new User("Test User", "test@example.com"); // User tanpa role dari mapper
 
-        UserRequestDto requestDto = new UserRequestDto("Test User", "test@example.com");
-        when(userMapper.toEntity(any())).thenReturn(user);
-        when(userRepository.save(any())).thenReturn(user);
-        when(userMapper.toDto(user)).thenReturn(responseDto);
+        when(roleRepository.findById(1L)).thenReturn(Optional.of(role));
+        when(userMapper.toEntity(any(UserRequestDto.class))).thenReturn(userToSave);
+        when(userRepository.save(any(User.class))).thenReturn(user); // Kembalikan user lengkap dengan role
+        when(userMapper.toDto(any(User.class))).thenReturn(userResponseDto);
 
         // Act
-        UserResponseDto result = userService.createUser(requestDto);
+        userService.createUser(requestDto);
 
         // Assert
-        assertThat(result.id()).isEqualTo(1L);
-        assertThat(result.name()).isEqualTo("Test User");
-        verify(userRepository).save(any(User.class));
+        verify(roleRepository).findById(1L);
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getRole()).isNotNull();
+        assertThat(userCaptor.getValue().getRole().getId()).isEqualTo(1L);
+    }
+
+    @Test
+    void createUser_whenRoleNotFound_shouldThrowException() {
+        // Arrange
+        UserRequestDto requestDto = new UserRequestDto("Test User", "test@example.com", 99L);
+        when(roleRepository.findById(99L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.createUser(requestDto);
+        });
+        verify(userRepository, never()).save(any());
     }
 
     @SuppressWarnings("unchecked")
@@ -72,10 +106,9 @@ class DefaultUserServiceTest {
         // Arrange
         Page<User> userPage = new PageImpl<>(List.of(user));
         when(userRepository.findAll(any(), any(Map.class))).thenReturn(userPage);
-        when(userMapper.toDto(user)).thenReturn(responseDto);
+        when(userMapper.toDto(any(User.class))).thenReturn(userResponseDto);
 
         // Act
-        // Gunakan new HashMap<>() bukan Map.of()
         Page<UserResponseDto> resultPage = userService.getAllUsers(PageRequest.of(0, 1), new HashMap<>());
 
         // Assert
@@ -87,7 +120,7 @@ class DefaultUserServiceTest {
     void getUserById_whenUserExists_shouldReturnDto() {
         // Arrange
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(userMapper.toDto(user)).thenReturn(new UserResponseDto(1L, "Test User", "test@example.com"));
+        when(userMapper.toDto(user)).thenReturn(userResponseDto);
 
         // Act
         UserResponseDto result = userService.getUserById(1L);
@@ -103,37 +136,43 @@ class DefaultUserServiceTest {
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        // Verifikasi bahwa eksepsi dilempar saat user tidak ditemukan
         assertThrows(ResourceNotFoundException.class, () -> {
             userService.getUserById(99L);
         });
     }
 
     @Test
-    void updateUser_whenUserExists_shouldUpdateAndReturnDto() {
+    void updateUser_whenUserAndRoleExist_shouldUpdateAndReturnDto() {
         // Arrange
-        UserRequestDto updateRequestDto = new UserRequestDto("Updated Name", "updated@email.com");
+        UserRequestDto updateDto = new UserRequestDto("Updated Name", "updated@email.com", 2L);
+        Role newRole = new Role("USER", "Regular user");
+        newRole.setId(2L);
+        UserResponseDto updatedResponse = new UserResponseDto(1L, "Updated Name", "updated@email.com", null);
+
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(roleRepository.findById(2L)).thenReturn(Optional.of(newRole));
+        when(userMapper.toDto(any(User.class))).thenReturn(updatedResponse);
 
         // Act
-        userService.updateUser(1L, updateRequestDto);
+        userService.updateUser(1L, updateDto);
 
         // Assert
-        // Verifikasi bahwa service mencoba menyimpan user yang sudah di-update
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).update(userCaptor.capture());
         assertThat(userCaptor.getValue().getName()).isEqualTo("Updated Name");
+        assertThat(userCaptor.getValue().getRole().getId()).isEqualTo(2L);
     }
 
     @Test
-    void updateUser_whenUserDoesNotExist_shouldThrowException() {
+    void updateUser_whenUserNotFound_shouldThrowException() {
         // Arrange
-        UserRequestDto updateRequestDto = new UserRequestDto("Updated Name", "updated@email.com");
+        UserRequestDto updateDto = new UserRequestDto("Updated Name", "updated@email.com", 1L);
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThrows(ResourceNotFoundException.class, () -> {
-            userService.updateUser(99L, updateRequestDto);
+            userService.updateUser(99L, updateDto);
         });
+        verify(roleRepository, never()).findById(anyLong());
     }
 }

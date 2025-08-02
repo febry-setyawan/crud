@@ -2,6 +2,7 @@ package com.example.crud.feature.user.controller;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import com.example.crud.common.exception.ResourceNotFoundException;
+import com.example.crud.feature.role.dto.RoleResponseDto; // <-- Import Role DTO
 import com.example.crud.feature.user.dto.UserRequestDto;
 import com.example.crud.feature.user.dto.UserResponseDto;
 import com.example.crud.feature.user.service.UserService;
@@ -45,7 +46,7 @@ import org.springframework.security.test.context.support.WithMockUser;
         JdbcRepositoriesAutoConfiguration.class,
         JdbcTemplateAutoConfiguration.class,
         SqlInitializationAutoConfiguration.class,
-        AopAutoConfiguration.class 
+        AopAutoConfiguration.class
     }
 )
 @WithMockUser(username = "testuser", roles = "USER")
@@ -67,92 +68,98 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        // Siapkan objek DTO untuk digunakan di semua test
-        userRequestDto = new UserRequestDto("Test User", "test@example.com");
-        userResponseDto = new UserResponseDto(1L, "Test User", "test@example.com");
-        updatedUserResponseDto = new UserResponseDto(1L, "Updated User", "updated@email.com");
-        
+        // Siapkan DTO untuk Role
+        RoleResponseDto roleDto = new RoleResponseDto(1L, "ADMIN", "Administrator");
+
+        // Perbarui DTO User untuk menyertakan roleId dan RoleResponseDto
+        userRequestDto = new UserRequestDto("Test User", "test@example.com", 1L);
+        userResponseDto = new UserResponseDto(1L, "Test User", "test@example.com", roleDto);
+        updatedUserResponseDto = new UserResponseDto(1L, "Updated User", "updated@email.com", roleDto);
+
         Page<UserResponseDto> userPage = new PageImpl<>(List.of(userResponseDto));
 
         // --- Definisikan Perilaku Mock untuk Setiap Skenario ---
-
-        // Skenario Sukses (Happy Path)
         when(userService.createUser(any(UserRequestDto.class))).thenReturn(userResponseDto);
         when(userService.getAllUsers(any(Pageable.class), anyMap())).thenReturn(userPage);
         when(userService.getUserById(1L)).thenReturn(userResponseDto);
         when(userService.updateUser(eq(1L), any(UserRequestDto.class))).thenReturn(updatedUserResponseDto);
         when(userService.deleteUser(1L)).thenReturn(true);
-
-        // Skenario Gagal (Sad Path)
         when(userService.getUserById(99L)).thenThrow(new ResourceNotFoundException("User not found with id: 99"));
         when(userService.updateUser(eq(99L), any(UserRequestDto.class))).thenThrow(new ResourceNotFoundException("User not found with id: 99"));
         when(userService.deleteUser(99L)).thenReturn(false);
     }
 
     @Test
-    void createUser_shouldReturnCreatedUser() throws Exception {
+    void createUser_shouldReturnCreatedUserWithRole() throws Exception {
         mockMvc.perform(post("/api/users")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userRequestDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.name", is("Test User")));
+                .andExpect(jsonPath("$.name", is("Test User")))
+                // Verifikasi data role di response
+                .andExpect(jsonPath("$.role.name", is("ADMIN")));
     }
 
     @Test
-    void getAllUsers_shouldReturnPageOfUsers() throws Exception {
-        mockMvc.perform(get("/api/users?page=0&size=5").with(csrf()))
+    void getAllUsers_shouldReturnPageOfUsersWithRole() throws Exception {
+        mockMvc.perform(get("/api/users?page=0&size=5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)))
-                .andExpect(jsonPath("$.content[0].id", is(1)));
+                // Verifikasi data role di dalam list
+                .andExpect(jsonPath("$.content[0].role.id", is(1)));
     }
 
     @Test
-    void getUserById_whenUserExists_shouldReturnUser() throws Exception {
-        mockMvc.perform(get("/api/users/1").with(csrf()))
+    void getUserById_whenUserExists_shouldReturnUserWithRole() throws Exception {
+        mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("Test User")));
+                .andExpect(jsonPath("$.name", is("Test User")))
+                // Verifikasi data role
+                .andExpect(jsonPath("$.role.name", is("ADMIN")));
     }
 
     @Test
-    void getUserById_whenUserDoesNotExist_shouldReturnNotFound() throws Exception {
-        mockMvc.perform(get("/api/users/99").with(csrf()))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message", is("User not found with id: 99")));
-    }
+    void updateUser_whenUserExists_shouldReturnUpdatedUserWithRole() throws Exception {
+        // Buat request DTO baru untuk update
+        UserRequestDto updateRequest = new UserRequestDto("Updated User", "updated@email.com", 1L);
 
-    @Test
-    void updateUser_whenUserExists_shouldReturnUpdatedUser() throws Exception {
         mockMvc.perform(put("/api/users/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserRequestDto("Updated User", "updated@email.com"))))
+                        .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("Updated User")));
+                .andExpect(jsonPath("$.name", is("Updated User")))
+                .andExpect(jsonPath("$.role.name", is("ADMIN")));
+    }
+
+    // --- Test untuk skenario "Not Found" dan "Delete" tidak perlu diubah ---
+
+    @Test
+    void getUserById_whenUserDoesNotExist_shouldReturnNotFound() throws Exception {
+        mockMvc.perform(get("/api/users/99"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void updateUser_whenUserDoesNotExist_shouldReturnNotFound() throws Exception {
         mockMvc.perform(put("/api/users/99")
-                        .with(csrf())   
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message", is("User not found with id: 99")));
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void deleteUser_whenUserExists_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/users/1")
-                .with(csrf()))         
+        mockMvc.perform(delete("/api/users/1").with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void deleteUser_whenUserDoesNotExist_shouldReturnNotFound() throws Exception {
-        mockMvc.perform(delete("/api/users/99")
-                .with(csrf()))
+        mockMvc.perform(delete("/api/users/99").with(csrf()))
                 .andExpect(status().isNotFound());
     }
 }

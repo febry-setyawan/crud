@@ -1,15 +1,22 @@
 package com.example.crud.feature.user.repository;
 
 import com.example.crud.common.repository.AbstractJdbcRepository;
+import com.example.crud.feature.role.model.Role;
 import com.example.crud.feature.user.model.User;
+import com.example.crud.util.TimerUtil;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @Repository
@@ -25,6 +32,15 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> {
         user.setCreatedBy(rs.getString("created_by"));
         user.setUpdatedAt(rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null);
         user.setUpdatedBy(rs.getString("updated_by"));
+
+        // Jika ada role yang ter-join, buat objek Role
+        if (rs.getObject("role_id") != null) {
+            Role role = new Role();
+            role.setId(rs.getLong("role_id"));
+            role.setName(rs.getString("role_name"));
+            role.setDescription(rs.getString("role_description"));
+            user.setRole(role);
+        }
         return user;
     };
     
@@ -53,6 +69,9 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> {
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("name", user.getName());
         params.put("email", user.getEmail());
+        if (user.getRole() != null) {
+            params.put("role_id", user.getRole().getId());
+        }
         // Menambahkan parameter audit
         params.put("created_at", user.getCreatedAt());
         params.put("created_by", user.getCreatedBy());
@@ -65,5 +84,76 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> {
     protected Set<String> getAllowedSortColumns() {
         // Daftarkan semua kolom yang boleh digunakan untuk sorting
         return Set.of("id", "name", "email");
+    }
+
+    @Override
+    public Optional<User> findById(Long id) {
+        return TimerUtil.time("findById", () -> {
+            String sql = """
+                SELECT
+                    u.id as user_id, u.name as user_name, u.email as user_email,
+                    u.created_at as user_created_at, u.created_by as user_created_by,
+                    u.updated_at as user_updated_at, u.updated_by as user_updated_by,
+                    r.id as role_id, r.name as role_name, r.description as role_description
+                FROM users u
+                LEFT JOIN roles r ON u.role_id = r.id
+                WHERE u.id = :id
+            """;
+            return jdbcClient.sql(sql)
+                    .param("id", id)
+                    .query(getRowMapper())
+                    .optional();
+        });
+    }
+
+    @Override
+    public Page<User> findAll(Pageable pageable, Map<String, Object> filters) {
+        return TimerUtil.time("findAll", () -> {
+            // --- Count Query (No change needed here) ---
+            StringBuilder countSql = new StringBuilder("SELECT count(*) FROM %s u".formatted(getTableName()));
+            if (filters != null && !filters.isEmpty()) {
+                String whereClause = buildWhereClause(filters, "u"); // Pass alias 'u'
+                countSql.append(" WHERE ").append(whereClause);
+            }
+            Long totalElements = jdbcClient.sql(countSql.toString())
+                                        .params(filters)
+                                        .query(Long.class)
+                                        .single();
+
+            // --- Data Query (This is the part to fix) ---
+            // DIUBAH: Gunakan query dengan JOIN dan alias
+            StringBuilder dataSql = new StringBuilder("""
+                SELECT
+                    u.id as user_id, u.name as user_name, u.email as user_email,
+                    u.created_at as user_created_at, u.created_by as user_created_by,
+                    u.updated_at as user_updated_at, u.updated_by as user_updated_by,
+                    r.id as role_id, r.name as role_name, r.description as role_description
+                FROM users u
+                LEFT JOIN roles r ON u.role_id = r.id
+            """);
+
+            if (filters != null && !filters.isEmpty()) {
+                String whereClause = buildWhereClause(filters, "u"); // Pass alias 'u'
+                dataSql.append(" WHERE ").append(whereClause);
+            }
+
+            String sortClause = buildSortClause(pageable.getSort(), "u"); // Pass alias 'u'
+            if (!sortClause.isEmpty()) {
+                dataSql.append(" ORDER BY ").append(sortClause);
+            }
+
+            dataSql.append(" LIMIT :limit OFFSET :offset");
+
+            Map<String, Object> queryParams = new LinkedHashMap<>(filters != null ? filters : Map.of());
+            queryParams.put("limit", pageable.getPageSize());
+            queryParams.put("offset", pageable.getOffset());
+
+            List<User> content = jdbcClient.sql(dataSql.toString())
+                                        .params(queryParams)
+                                        .query(getRowMapper())
+                                        .list();
+
+            return new PageImpl<>(content, pageable, totalElements);
+        });
     }
 }

@@ -1,6 +1,8 @@
 package com.example.crud.feature.user.repository;
 
 import com.example.crud.aop.AuditTrailAspect;
+import com.example.crud.feature.role.model.Role;
+import com.example.crud.feature.role.repository.RoleRepository;
 import com.example.crud.feature.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,24 +25,45 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
 @Import(UserRepositoryTest.TestRepoConfiguration.class)
-@Sql("/db/migration/V1__Create_users_table.sql")
+@Sql({
+    "/db/migration/V1__Create_users_table.sql",
+    "/db/migration/V2__Create_roles_table.sql",
+    "/db/migration/V3__Add_role_id_to_users_table.sql" 
+})
 @WithMockUser("test-user")
 class UserRepositoryTest {
 
     @TestConfiguration
     @EnableAspectJAutoProxy
-    @Import({UserRepository.class, AuditTrailAspect.class})
+    @Import({UserRepository.class, RoleRepository.class, AuditTrailAspect.class})
     static class TestRepoConfiguration {}
 
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
+    private Role savedRole;
+
     // Siapkan data sebelum beberapa test
     @BeforeEach
     void setUpDatabase() {
-        userRepository.save(new User("Charlie", "charlie@example.com"));
-        userRepository.save(new User("Alice", "alice@example.com"));
-        userRepository.save(new User("Bob", "bob@example.com"));
+        // 1. Buat dan simpan Role terlebih dahulu
+        savedRole = roleRepository.save(new Role("USER", "Standard User"));
+
+        // 2. Buat User dan set Role yang sudah disimpan
+        User user1 = new User("Charlie", "charlie@example.com");
+        user1.setRole(savedRole);
+        userRepository.save(user1);
+
+        User user2 = new User("Alice", "alice@example.com");
+        user2.setRole(savedRole);
+        userRepository.save(user2);
+
+        User user3 = new User("Bob", "bob@example.com");
+        user3.setRole(savedRole);
+        userRepository.save(user3);
     }
 
     @Test
@@ -81,12 +104,19 @@ class UserRepositoryTest {
         userRepository.deleteById(2L);
         userRepository.deleteById(3L);
 
+        // Arrange
         User user = new User("John Doe", "john.doe@example.com");
+        user.setRole(savedRole); // <-- Jangan lupa set Role
+
+        // Act
         User savedUser = userRepository.save(user);
 
+        // Assert
         assertThat(savedUser.getId()).isNotNull();
         assertThat(savedUser.getCreatedAt()).isNotNull();
         assertThat(savedUser.getCreatedBy()).isEqualTo("test-user");
+        assertThat(savedUser.getRole()).isNotNull();
+        assertThat(savedUser.getRole().getId()).isEqualTo(savedRole.getId());
     }
 
     @Test

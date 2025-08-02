@@ -115,13 +115,19 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
     }
 
     // --- Helper Methods ---
-    private String buildWhereClause(Map<String, Object> filters) {
+    protected String buildWhereClause(Map<String, Object> filters) {
         return filters.keySet().stream()
                 .map(key -> "%s = :%s".formatted(key, key))
                 .collect(Collectors.joining(" AND "));
     }
 
-    private String buildSortClause(Sort sort) {
+    protected String buildWhereClause(Map<String, Object> filters, String alias) {
+    return filters.keySet().stream()
+            .map(key -> "%s.%s = :%s".formatted(alias, key, key))
+            .collect(Collectors.joining(" AND "));
+}
+
+    protected String buildSortClause(Sort sort) {
         return sort.stream()
                 .map(order -> {
                     // Validasi kolom sort dengan whitelist untuk keamanan
@@ -133,6 +139,20 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
                 .filter(s -> s != null)
                 .collect(Collectors.joining(", "));
     }
+
+    protected String buildSortClause(Sort sort, String alias) {
+        return sort.stream()
+                .map(order -> {
+                    if (getAllowedSortColumns().contains(order.getProperty())) {
+                        // Gunakan alias yang diberikan
+                        return alias + "." + order.getProperty() + " " + (order.isAscending() ? "ASC" : "DESC");
+                    }
+                    return null;
+                })
+                .filter(s -> s != null)
+                .collect(Collectors.joining(", "));
+    }
+
 
     @Override
     public int update(T entity) {
@@ -168,7 +188,7 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
         });
     }
 
-    private void logQuery(String sql, Map<String, Object> params) {
+    protected void logQuery(String sql, Map<String, Object> params) {
         log.debug("Execute Query : {}", sql);
         if (params != null && !params.isEmpty()) {
             log.debug("Parameter Query : {}", params);
