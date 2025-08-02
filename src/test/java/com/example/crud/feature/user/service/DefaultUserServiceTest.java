@@ -1,7 +1,6 @@
 package com.example.crud.feature.user.service;
 
 import com.example.crud.common.exception.ResourceNotFoundException;
-import com.example.crud.feature.role.dto.RoleFilterDto;
 import com.example.crud.feature.role.model.Role;
 import com.example.crud.feature.role.repository.RoleRepository;
 import com.example.crud.feature.user.dto.UserFilterDto;
@@ -21,7 +20,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
