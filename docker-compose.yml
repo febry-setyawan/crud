@@ -30,6 +30,28 @@ services:
       SPRING_BOOT_ADMIN_SERVER_WEB_ADMIN_USERNAME: admin
       SPRING_BOOT_ADMIN_SERVER_WEB_ADMIN_PASSWORD: admin
 
+  # Layanan untuk Spring Cloud Eureka Server
+  eureka-server:
+    image: springcloud/demo-eureka-server:latest
+    container_name: eureka_server
+    ports:
+      - "8761:8761"
+
+  # Layanan untuk Spring Cloud Gateway
+  # api-gateway:
+  #   # image: springcloud/spring-cloud-gateway
+  #   image: springcommunity/spring-petclinic-api-gateway
+  #   container_name: api_gateway
+  #   depends_on:
+  #     - eureka-server
+  #   ports:
+  #     - "8088:8080"
+  #   environment:
+  #     EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+  #     SPRING_CLOUD_GATEWAY_ROUTES_0_ID: crud-service
+  #     SPRING_CLOUD_GATEWAY_ROUTES_0_URI: lb://crud
+  #     SPRING_CLOUD_GATEWAY_ROUTES_0_PREDICATES_0: Path=/api/**
+
   # Layanan untuk aplikasi Spring Boot Anda
   app:
     build: .
@@ -39,6 +61,8 @@ services:
         condition: service_healthy
       admin-server:
         condition: service_started
+      eureka-server:
+        condition: service_started
     ports:
       - "8080:8080"
     environment:
@@ -47,9 +71,12 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/proddb
       SPRING_DATASOURCE_USERNAME: produser
       SPRING_DATASOURCE_PASSWORD: iSTbRABStIon
-      # Variabel baru untuk menunjuk ke admin-server di jaringan Docker
+      # Variabel untuk menunjuk ke admin-server di jaringan Docker
       SPRING_BOOT_ADMIN_CLIENT_URL: http://admin-server:8070
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "*"
+      # Variabel untuk mendaftarkan diri ke Eureka
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      EUREKA_INSTANCE_PREFER_IPADDRESS: false
 
 # Volume untuk menyimpan data PostgreSQL secara persisten
 volumes:
