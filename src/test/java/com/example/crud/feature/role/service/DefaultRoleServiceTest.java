@@ -52,6 +52,7 @@ class DefaultRoleServiceTest {
         responseDto = new RoleResponseDto(1L, "ADMIN", "Admin role");
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void getAllRoles_withFilter_shouldBuildMapWithWildcardsAndCallRepository() {
         // Arrange
@@ -75,6 +76,7 @@ class DefaultRoleServiceTest {
         assertThat(capturedMap.get("name")).isEqualTo("%admin%");
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void getAllRoles_withNoFilter_shouldCallRepositoryWithEmptyMap() {
         // Arrange

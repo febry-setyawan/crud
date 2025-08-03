@@ -70,6 +70,7 @@ class DefaultUserServiceTest {
         userResponseDto = new UserResponseDto(1L, "Test User", "test@example.com", null);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void getAllUsers_withFilter_shouldBuildMapWithWildcardsAndCallRepository() {
         // Arrange
@@ -93,6 +94,7 @@ class DefaultUserServiceTest {
         assertThat(capturedMap.get("name")).isEqualTo("%Test%");
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void getAllUsers_withNoFilter_shouldCallRepositoryWithEmptyMap() {
         // Arrange

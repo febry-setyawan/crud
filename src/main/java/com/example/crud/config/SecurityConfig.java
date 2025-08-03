@@ -29,7 +29,12 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable()) // Nonaktifkan CSRF untuk REST API
             .authorizeHttpRequests(auth -> auth
                 // Izinkan akses publik ke Swagger UI dan H2 Console
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/h2-console/**").permitAll()
+                .requestMatchers(
+                    "/swagger-ui/**", 
+                    "/v3/api-docs/**", 
+                    "/h2-console/**",
+                    "/actuator/**"
+                ).permitAll()
                 // Semua request lain harus terotentikasi
                 .anyRequest().authenticated()
             )
