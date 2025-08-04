@@ -5,6 +5,7 @@ import com.example.crud.feature.role.dto.RoleRequestDto;
 import com.example.crud.feature.role.dto.RoleResponseDto;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -12,13 +13,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Service
 @Primary
+@ConditionalOnProperty(
+    value="features.resilience.role.enabled", 
+    havingValue = "true", 
+    matchIfMissing = true
+)
 public class ResilientRoleService implements RoleService {
 
     private static final Logger log = LoggerFactory.getLogger(ResilientRoleService.class);
@@ -61,7 +65,7 @@ public class ResilientRoleService implements RoleService {
         return new RoleResponseDto(id, "Fallback Role", "Service is currently unavailable");
     }
 
-    private Page<RoleResponseDto> fallbackGetAllRoles(Pageable pageable, Map<String, Object> filters, Throwable t) {
+    private Page<RoleResponseDto> fallbackGetAllRoles(Pageable pageable, RoleFilterDto filters, Throwable t) {
         log.error("Circuit breaker opened for getAllRoles", t);
         return new PageImpl<>(Collections.emptyList(), pageable, 0);
     }

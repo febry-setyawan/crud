@@ -5,19 +5,23 @@ import com.example.crud.feature.user.dto.UserRequestDto;
 import com.example.crud.feature.user.dto.UserResponseDto;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.util.Collections;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Service
 @Primary
+@ConditionalOnProperty(
+    value="features.resilience.user.enabled", 
+    havingValue = "true", 
+    matchIfMissing = true
+)
 public class ResilientUserService implements UserService {
 
     private static final Logger log = LoggerFactory.getLogger(ResilientUserService.class);
@@ -60,7 +64,7 @@ public class ResilientUserService implements UserService {
         return new UserResponseDto(id, "Fallback User", "fallback@example.com", null);
     }
 
-    private Page<UserResponseDto> fallbackGetAllUsers(Pageable pageable, Map<String, Object> filters, Throwable t) {
+    private Page<UserResponseDto> fallbackGetAllUsers(Pageable pageable, UserFilterDto filters, Throwable t) {
         log.error("Circuit breaker opened for getAllUsers", t);
         return new PageImpl<>(Collections.emptyList(), pageable, 0);
     }
