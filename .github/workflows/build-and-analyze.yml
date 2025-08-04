@@ -1,0 +1,48 @@
+# Nama alur kerja yang akan muncul di tab Actions
+name: Build, Test, and Analyze
+
+# Pemicu: Alur kerja ini akan berjalan setiap kali ada push ke branch 'master' atau 'main'
+on:
+  push:
+    branches:
+      - master
+
+# Daftar pekerjaan yang akan dijalankan
+jobs:
+  build-and-sonaranalysis:
+    # Nama pekerjaan
+    name: Build, Test & SonarCloud Analysis
+    # Menggunakan server Ubuntu terbaru yang disediakan GitHub
+    runs-on: ubuntu-latest
+
+    # Langkah-langkah yang akan dieksekusi
+    steps:
+      # 1. Mengunduh kode dari repository Anda
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Mengatur JDK versi 21
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # 3. Cache dependensi Maven untuk mempercepat build
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # 4. Build, jalankan tes (untuk generate JaCoCo report), dan kirim ke SonarCloud
+      - name: Build, Test and Analyze with Maven
+        env:
+          # Menggunakan secret yang sudah kita simpan
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Diperlukan untuk pull request decoration
+        run: >
+          mvn -B clean verify sonar:sonar 
+          -Dsonar.host.url=https://sonarcloud.io
