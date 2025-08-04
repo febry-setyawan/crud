@@ -25,12 +25,10 @@ FROM registry.redhat.io/ubi9-minimal:9.6-1754000177
 # Tentukan direktori kerja
 WORKDIR /app
 
-# Install JRE 21 headless (tanpa GUI) menggunakan microdnf dan bersihkan cache dalam satu layer
+# Gabungkan instalasi JRE, pembuatan user, dan pembersihan dalam satu layer
 RUN microdnf install -y java-21-openjdk-headless && \
-    microdnf clean all
-
-# Buat user non-root untuk keamanan
-RUN adduser --uid 1001 --gid 0 appuser
+    microdnf clean all && \
+    adduser --uid 1001 --gid 0 appuser
 
 # Salin file JAR yang sudah di-build dari stage sebelumnya
 COPY --from=build /app/target/crud-0.0.1-SNAPSHOT.jar app.jar
