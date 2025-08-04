@@ -46,5 +46,6 @@ jobs:
         run: >
           mvn -B clean verify sonar:sonar 
           -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.projectKey=febry-setyawan_crud
           -Dsonar.organization=${{ secrets.ORG_KEY }}
           -Dsonar.login=${{ secrets.SONAR_TOKEN }}
