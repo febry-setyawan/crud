@@ -1,5 +1,7 @@
 # Generic CRUD Framework dengan Spring Boot
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=febry-setyawan_crud&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=febry-setyawan_crud) [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=febry-setyawan_crud&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=febry-setyawan_crud) [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=febry-setyawan_crud&metric=bugs)](https://sonarcloud.io/summary/new_code?id=febry-setyawan_crud) [![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=febry-setyawan_crud&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=febry-setyawan_crud) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=febry-setyawan_crud&metric=coverage)](https://sonarcloud.io/summary/new_code?id=febry-setyawan_crud)
+
 Framework ini adalah sebuah proyek demonstrasi untuk membangun sistem CRUD (Create, Read, Update, Delete) yang generik dan dapat digunakan kembali (*reusable*) menggunakan Spring Boot. Proyek ini dibangun tanpa JPA/Hibernate, dan sebagai gantinya menggunakan `JdbcClient` untuk interaksi dengan database.
 
 ## Fitur Utama ✨

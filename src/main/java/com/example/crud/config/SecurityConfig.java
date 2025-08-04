@@ -26,7 +26,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Nonaktifkan CSRF untuk REST API
+            .csrf(csrf -> csrf.ignoringRequestMatchers(
+                request -> request.getRequestURI().startsWith("/h2-console"), // Nonaktifkan CSRF untuk H2 Console
+                request -> request.getRequestURI().startsWith("/actuator"), // Nonaktifkan CSRF untuk actuator
+                request -> request.getRequestURI().startsWith("/swagger-ui"), // Nonaktifkan CSRF untuk Swagger UI
+                request -> request.getRequestURI().startsWith("/v3/api-docs") // Nonaktifkan CSRF untuk OpenAPI docs
+            ))
             .authorizeHttpRequests(auth -> auth
                 // Izinkan akses publik ke Swagger UI dan H2 Console
                 .requestMatchers(
