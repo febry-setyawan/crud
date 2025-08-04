@@ -1,5 +1,8 @@
 # Nama alur kerja yang akan muncul di tab Actions
 name: Build, Test, and Analyze
+permissions:
+  contents: read
+  pull-requests: write
 
 # Pemicu: Alur kerja ini akan berjalan setiap kali ada push ke branch 'master' atau 'main'
 on:
