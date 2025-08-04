@@ -36,9 +36,9 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException ex, HttpServletRequest request) {
         
         Map<String, String> fieldErrors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error -> {
-            fieldErrors.put(error.getField(), error.getDefaultMessage());
-        });
+        ex.getBindingResult().getFieldErrors().forEach(error -> 
+            fieldErrors.put(error.getField(), error.getDefaultMessage())
+        );
 
         // Kita bisa membuat DTO error yang lebih spesifik jika mau,
         // tapi untuk sekarang kita gunakan yang sudah ada dan sesuaikan pesannya.

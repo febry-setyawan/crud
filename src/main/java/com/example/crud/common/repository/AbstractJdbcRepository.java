@@ -67,7 +67,6 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
         });
     }
 
-    @SuppressWarnings("null")
     @Override
     public Page<T> findAll(Pageable pageable, Map<String, Object> filters) {
         return TimerUtil.time("findAll", () -> {

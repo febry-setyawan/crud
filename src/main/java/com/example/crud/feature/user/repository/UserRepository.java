@@ -108,7 +108,6 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> {
         });
     }
 
-    @SuppressWarnings("null")
     @Override
     public Page<User> findAll(Pageable pageable, Map<String, Object> filters) {
         return TimerUtil.time("findAll", () -> {
