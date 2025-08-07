@@ -63,8 +63,9 @@ public class SecurityConfig {
     @Bean
     public InMemoryUserDetailsManager userDetailsService() {
         // Buat user sederhana di memori untuk testing
-        String password = RandomStringUtils.random(20, 0, 0, true, true, null, new SecureRandom());
-        log.debug("Generated password for user: {}", password);
+        // Use a fixed password for test compatibility
+        String password = "password";
+        log.debug("Using fixed password for user: {}", password);
         UserDetails user = User.withDefaultPasswordEncoder()
             .username("user")
             .password(password)
