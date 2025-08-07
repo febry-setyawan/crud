@@ -14,6 +14,18 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponseDto> handleRuntimeException(RuntimeException ex, HttpServletRequest request) {
+        ErrorResponseDto errorResponse = new ErrorResponseDto(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
             ResourceNotFoundException ex, HttpServletRequest request) {

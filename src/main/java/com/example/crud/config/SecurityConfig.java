@@ -11,7 +11,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import com.example.crud.feature.auth.filter.JwtAuthenticationFilter;
-import com.example.crud.feature.auth.service.LoginService;
+import com.example.crud.feature.auth.service.AuthenticationService;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -54,8 +54,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public LoginService loginService() {
-        return new LoginService();
+    public AuthenticationService authenticationService() {
+        return new AuthenticationService();
     }
 
     @Bean

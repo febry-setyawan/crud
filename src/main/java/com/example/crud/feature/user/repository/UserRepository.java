@@ -7,11 +7,19 @@ import com.example.crud.feature.user.model.User;
 import com.example.crud.util.TimerUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Repository;
 import javax.sql.DataSource;
+
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Repository
-public class UserRepository extends AbstractJdbcRepository<User, Long> {
+public class UserRepository extends AbstractJdbcRepository<User, Long> implements UserDetailsService{
 
     private static final RowMapper<User> USER_ROW_MAPPER = (rs, rowNum) -> {
         User user = new User();
@@ -157,5 +165,19 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> {
 
             return new PageImpl<>(content, pageable, totalElements);
         });
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = this.findAll(PageRequest.of(0, 1), Map.of("username", username))
+            .getContent().stream().findFirst()
+            .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        String roleName = user.getRole() != null ? user.getRole().getName() : "USER";
+        GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + roleName);
+        return org.springframework.security.core.userdetails.User
+                .withUsername(user.getUsername())
+                .password(user.getPassword())
+                .authorities(Collections.singleton(authority))
+                .build();
     }
 }
