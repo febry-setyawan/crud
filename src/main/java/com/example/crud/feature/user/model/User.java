@@ -1,5 +1,6 @@
 package com.example.crud.feature.user.model;
 
+
 import com.example.crud.common.model.BaseEntityAuditable;
 import com.example.crud.feature.role.model.Role;
 

@@ -10,6 +10,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import com.example.crud.feature.auth.filter.JwtAuthenticationFilter;
+
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+
 import static org.springframework.security.config.Customizer.withDefaults;
 
 import java.security.SecureRandom;
@@ -23,8 +29,9 @@ import org.slf4j.LoggerFactory;
 public class SecurityConfig {
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
             .csrf(csrf -> csrf.ignoringRequestMatchers(
                 request -> request.getRequestURI().startsWith("/h2-console"), // Nonaktifkan CSRF untuk H2 Console
@@ -39,12 +46,15 @@ public class SecurityConfig {
                     "/v3/api-docs/**", 
                     "/h2-console/**",
                     "/actuator/**"
+                    , "/api/auth/**"
                 ).permitAll()
                 // Semua request lain harus terotentikasi
                 .anyRequest().authenticated()
             )
-            .httpBasic(withDefaults()) // Aktifkan HTTP Basic Authentication
+            // Nonaktifkan HTTP Basic Authentication, pakai JWT
             .headers(headers -> headers.frameOptions(FrameOptionsConfig::sameOrigin)); // Izinkan H2 Console di dalam frame
+
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -61,5 +71,10 @@ public class SecurityConfig {
             .roles("USER")
             .build();
         return new InMemoryUserDetailsManager(user);
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 }

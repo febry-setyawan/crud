@@ -1,17 +1,16 @@
 package com.example.crud.feature.user.repository;
 
+
 import com.example.crud.common.repository.AbstractJdbcRepository;
 import com.example.crud.feature.role.model.Role;
 import com.example.crud.feature.user.model.User;
 import com.example.crud.util.TimerUtil;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
-
 import javax.sql.DataSource;
 import java.util.LinkedHashMap;
 import java.util.List;

@@ -1,43 +1,48 @@
 package com.example.crud.feature.user.controller;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+
 import com.example.crud.common.exception.ResourceNotFoundException;
-import com.example.crud.feature.role.dto.RoleResponseDto; // <-- Import Role DTO
+import com.example.crud.feature.role.dto.RoleResponseDto;
 import com.example.crud.feature.user.dto.UserFilterDto;
 import com.example.crud.feature.user.dto.UserRequestDto;
 import com.example.crud.feature.user.dto.UserResponseDto;
 import com.example.crud.feature.user.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-
 import java.util.List;
-
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import org.springframework.security.test.context.support.WithMockUser;
 
-@WebMvcTest(controllers = UserController.class)
-@WithMockUser(username = "testuser", roles = "USER")
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+@WithMockUser(roles = "ADMIN")
 class UserControllerTest {
+
 
     @Autowired
     private MockMvc mockMvc;
+
 
     @SuppressWarnings("removal")
     @MockBean
@@ -120,11 +125,14 @@ class UserControllerTest {
 
     // --- Test untuk skenario "Not Found" dan "Delete" tidak perlu diubah ---
 
+
     @Test
     void getUserById_whenUserDoesNotExist_shouldReturnNotFound() throws Exception {
         mockMvc.perform(get("/api/users/99"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message", is("User not found with id: 99")));
     }
+
 
     @Test
     void updateUser_whenUserDoesNotExist_shouldReturnNotFound() throws Exception {
@@ -132,7 +140,8 @@ class UserControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userRequestDto)))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message", is("User not found with id: 99")));
     }
 
     @Test
@@ -141,9 +150,11 @@ class UserControllerTest {
                 .andExpect(status().isNoContent());
     }
 
+
     @Test
     void deleteUser_whenUserDoesNotExist_shouldReturnNotFound() throws Exception {
         mockMvc.perform(delete("/api/users/99").with(csrf()))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message", is("User not found with id: 99")));
     }
 }
