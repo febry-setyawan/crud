@@ -49,7 +49,7 @@ class AuthControllerIntegrationTest {
                 jdbcTemplate.update("DELETE FROM users WHERE username = ?", "admin@email.com");
                 // Pastikan role ADMIN ada
                 Long roleId = jdbcTemplate.queryForObject("SELECT id FROM roles WHERE name = ?",
-                                new Object[] { "ADMIN" }, Long.class);
+                                Long.class, "ADMIN");
                 // Insert user dengan password bcrypt
                 String bcrypt = new BCryptPasswordEncoder().encode("s3cr3t");
                 jdbcTemplate.update("INSERT INTO users (id, username, password, role_id) VALUES (?, ?, ?, ?)", 100L,

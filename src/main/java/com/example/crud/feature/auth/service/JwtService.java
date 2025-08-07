@@ -2,6 +2,7 @@ package com.example.crud.feature.auth.service;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
@@ -12,9 +13,9 @@ import java.util.UUID;
 
 @Service
 public class JwtService {
-    public CacheManager getCacheManager() {
-        return cacheManager;
-    }
+
+    private static final String REFRESH_TOKEN_CACHE = "refreshTokens";
+
     @Value("${jwt.secret}")
     private String jwtSecret;
 
@@ -27,7 +28,9 @@ public class JwtService {
     @Autowired
     private CacheManager cacheManager;
 
-    private static final String REFRESH_TOKEN_CACHE = "refreshTokens";
+    public CacheManager getCacheManager() {
+        return cacheManager;
+    }
 
     public String generateToken(String username) {
         return Jwts.builder()
@@ -49,7 +52,8 @@ public class JwtService {
 
     public boolean validateRefreshToken(String refreshToken, String username) {
         Cache cache = cacheManager.getCache(REFRESH_TOKEN_CACHE);
-        if (cache == null) return false;
+        if (cache == null)
+            return false;
         String cachedUsername = cache.get(refreshToken, String.class);
         return username.equals(cachedUsername);
     }

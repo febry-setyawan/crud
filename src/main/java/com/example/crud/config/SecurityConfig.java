@@ -11,18 +11,12 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import com.example.crud.feature.auth.filter.JwtAuthenticationFilter;
-import com.example.crud.feature.auth.service.AuthenticationService;
-
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
@@ -53,10 +47,10 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    public AuthenticationService authenticationService() {
-        return new AuthenticationService();
-    }
+    // @Bean
+    // public AuthenticationService authenticationService() {
+    //     return new AuthenticationService();
+    // }
 
     @Bean
     public PasswordEncoder passwordEncoder() {

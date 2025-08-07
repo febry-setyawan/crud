@@ -13,11 +13,13 @@ import com.example.crud.feature.auth.dto.RefreshResponse;
 @Service
 public class AuthenticationService {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
-    @Autowired
-    private JwtService jwtService;
+    public AuthenticationService(AuthenticationManager authenticationManager, JwtService jwtService) {
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
+    }
 
     public RefreshResponse login(AuthRequest authRequest) {
         try {

@@ -2,14 +2,13 @@ package com.example.crud.feature.auth.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
-public class JwtServiceTest {
+class JwtServiceTest {
     private JwtService jwtService;
     private CacheManager cacheManager;
     private Cache cache;
