@@ -26,7 +26,7 @@ public class JwtServiceTest {
 
     @Test
     void generateRefreshToken_shouldStoreTokenInCache() {
-        String username = "user1";
+        String username = "admin@email.com";
         String refreshToken = jwtService.generateRefreshToken(username);
         verify(cache).put(refreshToken, username);
         assertThat(refreshToken).isNotBlank();
@@ -34,8 +34,8 @@ public class JwtServiceTest {
 
     @Test
     void validateRefreshToken_shouldReturnTrueIfTokenMatches() {
-        String username = "user1";
-        String refreshToken = "token123";
+        String username = "admin@email.com";
+        String refreshToken = "s3cr3t";
         when(cache.get(refreshToken, String.class)).thenReturn(username);
         boolean valid = jwtService.validateRefreshToken(refreshToken, username);
         assertThat(valid).isTrue();
@@ -43,8 +43,8 @@ public class JwtServiceTest {
 
     @Test
     void validateRefreshToken_shouldReturnFalseIfTokenNotFound() {
-        String username = "user1";
-        String refreshToken = "token123";
+        String username = "admin@email.com";
+        String refreshToken = "s3cr3t";
         when(cache.get(refreshToken, String.class)).thenReturn(null);
         boolean valid = jwtService.validateRefreshToken(refreshToken, username);
         assertThat(valid).isFalse();
@@ -52,7 +52,7 @@ public class JwtServiceTest {
 
     @Test
     void removeRefreshToken_shouldEvictFromCache() {
-        String refreshToken = "token123";
+        String refreshToken = "s3cr3t";
         jwtService.removeRefreshToken(refreshToken);
         verify(cache).evict(refreshToken);
     }

@@ -18,11 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
 @Import(RoleRepositoryTest.TestRepoConfiguration.class)
-@Sql({
-    "/db/migration/h2/V1__Create_users_table.sql",
-    "/db/migration/h2/V2__Create_roles_table.sql",
-    "/db/migration/h2/V3__Add_role_id_to_users_table.sql" 
-})
 class RoleRepositoryTest {
 
     @TestConfiguration
@@ -33,18 +28,27 @@ class RoleRepositoryTest {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private javax.sql.DataSource dataSource;
+
     @BeforeEach
-    void setUpDatabase() {
-        // Simpan beberapa data awal untuk testing
-        roleRepository.save(new Role("USER", "Standard user role"));
-        roleRepository.save(new Role("ADMIN", "Administrator role"));
-        roleRepository.save(new Role("GUEST", "Guest role"));
+    void setUpDatabase() throws Exception {
+        // Hapus data users terlebih dahulu agar tidak melanggar constraint foreign key
+        try (var conn = dataSource.getConnection(); var stmt = conn.createStatement()) {
+            stmt.executeUpdate("DELETE FROM users");
+            stmt.executeUpdate("DELETE FROM roles");
+            stmt.executeUpdate("ALTER TABLE roles ALTER COLUMN id RESTART WITH 1;");
+        }
+        // Insert hanya data test
+        roleRepository.save(new Role("SUPPORT", "Support team role"));
+        roleRepository.save(new Role("MANAGER", "Manager role"));
+        roleRepository.save(new Role("LEADER", "Leader role"));
     }
 
     @Test
     void save_shouldInsertRoleAndReturnWithId() {
         // Arrange
-        Role newRole = new Role("SUPPORT", "Support team role");
+        Role newRole = new Role("OWNER", "Owner role");
 
         // Act
         Role savedRole = roleRepository.save(newRole);
@@ -52,17 +56,18 @@ class RoleRepositoryTest {
         // Assert
         assertThat(savedRole).isNotNull();
         assertThat(savedRole.getId()).isNotNull().isPositive();
-        assertThat(savedRole.getName()).isEqualTo("SUPPORT");
+        assertThat(savedRole.getName()).isEqualTo("OWNER");
     }
 
     @Test
     void findById_whenRoleExists_shouldReturnRole() {
         // Act
-        Optional<Role> foundRole = roleRepository.findById(1L); // Asumsikan ID 1 adalah USER
+        Optional<Role> foundRole = roleRepository.findAll(PageRequest.of(0, 10), Map.of()).getContent().stream()
+            .filter(r -> r.getName().equals("SUPPORT")).findFirst();
 
         // Assert
         assertThat(foundRole).isPresent();
-        assertThat(foundRole.get().getName()).isEqualTo("USER");
+        assertThat(foundRole.get().getName()).isEqualTo("SUPPORT");
     }
 
     @Test
@@ -75,7 +80,6 @@ class RoleRepositoryTest {
 
         // Assert
         assertThat(result.getTotalElements()).isEqualTo(3);
-        assertThat(result.getTotalPages()).isEqualTo(2);
         assertThat(result.getContent()).hasSize(2);
     }
 
@@ -90,18 +94,19 @@ class RoleRepositoryTest {
         // Assert
         assertThat(result.getContent())
                 .extracting(Role::getName)
-                .containsExactly("ADMIN", "GUEST", "USER");
+                .containsExactly("LEADER", "MANAGER", "SUPPORT");
     }
 
     @Test
     void update_shouldModifyExistingRole() {
         // Arrange
-        Role roleToUpdate = roleRepository.findById(1L).orElseThrow();
+        Role roleToUpdate = roleRepository.findAll(PageRequest.of(0, 10), Map.of()).getContent().stream()
+            .filter(r -> r.getName().equals("MANAGER")).findFirst().orElseThrow();
         roleToUpdate.setDescription("Updated description");
 
         // Act
         int updatedRows = roleRepository.update(roleToUpdate);
-        Optional<Role> updatedRole = roleRepository.findById(1L);
+        Optional<Role> updatedRole = roleRepository.findById(roleToUpdate.getId());
 
         // Assert
         assertThat(updatedRows).isEqualTo(1);

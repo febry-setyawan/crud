@@ -24,8 +24,8 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> {
     private static final RowMapper<User> USER_ROW_MAPPER = (rs, rowNum) -> {
         User user = new User();
         user.setId(rs.getLong("id"));
-        user.setName(rs.getString("name"));
-        user.setEmail(rs.getString("email"));
+        user.setUsername(rs.getString("username"));        
+        user.setPassword(rs.getString("password"));
         // Mapping kolom audit
         user.setCreatedAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null);
         user.setCreatedBy(rs.getString("created_by"));
@@ -66,8 +66,8 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> {
     protected Map<String, Object> getUpdateParameters(User user) {
         // Gunakan LinkedHashMap untuk menjaga urutan, penting untuk SimpleJdbcInsert
         Map<String, Object> params = new LinkedHashMap<>();
-        params.put("name", user.getName());
-        params.put("email", user.getEmail());
+        params.put("username", user.getUsername());
+        params.put("password", user.getPassword());
         if (user.getRole() != null) {
             params.put("role_id", user.getRole().getId());
         }
@@ -82,7 +82,7 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> {
     @Override
     protected Set<String> getAllowedSortColumns() {
         // Daftarkan semua kolom yang boleh digunakan untuk sorting
-        return Set.of("id", "name", "email");
+        return Set.of("id", "username", "password");
     }
 
     @Override
@@ -90,7 +90,7 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> {
         return TimerUtil.time("findById", () -> {
             String sql = """
                 SELECT
-                    u.id as user_id, u.name as user_name, u.email as user_email,
+                    u.id as user_id, u.username as user_name, u.password as user_password,
                     u.created_at as user_created_at, u.created_by as user_created_by,
                     u.updated_at as user_updated_at, u.updated_by as user_updated_by,
                     r.id as role_id, r.name as role_name, r.description as role_description
@@ -125,7 +125,7 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> {
             // Gunakan query dengan JOIN dan alias
             StringBuilder dataSql = new StringBuilder(("""
                 SELECT
-                    u.id as user_id, u.name as user_name, u.email as user_email,
+                    u.id as user_id, u.username as user_name, u.password as user_password,
                     u.created_at as user_created_at, u.created_by as user_created_by,
                     u.updated_at as user_updated_at, u.updated_by as user_updated_by,
                     r.id as role_id, r.name as role_name, r.description as role_description

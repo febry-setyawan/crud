@@ -73,7 +73,7 @@ class DefaultUserServiceTest {
     void getAllUsers_withFilter_shouldBuildMapWithWildcardsAndCallRepository() {
         // Arrange
         UserFilterDto filterDto = new UserFilterDto();
-        filterDto.setName("Test"); // Filter dengan 'Test'
+        filterDto.setUsername("admin@email.com"); // Filter dengan 'admin@email.com'
 
         Page<User> userPage = new PageImpl<>(List.of(user));
         when(userRepository.findAll(any(), any(Map.class))).thenReturn(userPage);
@@ -89,7 +89,7 @@ class DefaultUserServiceTest {
 
         // Pastikan service menambahkan wildcard '%' untuk pencarian LIKE
         assertThat(capturedMap).hasSize(1);
-        assertThat(capturedMap.get("name")).isEqualTo("%Test%");
+        assertThat(capturedMap.get("username")).isEqualTo("%admin@email.com%");
     }
 
     @SuppressWarnings("unchecked")
@@ -113,8 +113,8 @@ class DefaultUserServiceTest {
     @Test
     void createUser_whenRoleExists_shouldSaveUserWithRole() {
         // Arrange
-        UserRequestDto requestDto = new UserRequestDto("Test User", "test@example.com", 1L);
-        User userToSave = new User("Test User", "test@example.com"); // User tanpa role dari mapper
+        UserRequestDto requestDto = new UserRequestDto("admin@email.com", "s3cr3t", 1L);
+        User userToSave = new User("admin@email.com", "s3cr3t"); // User tanpa role dari mapper
 
         when(roleRepository.findById(1L)).thenReturn(Optional.of(role));
         when(userMapper.toEntity(any(UserRequestDto.class))).thenReturn(userToSave);
@@ -135,7 +135,7 @@ class DefaultUserServiceTest {
     @Test
     void createUser_whenRoleNotFound_shouldThrowException() {
         // Arrange
-        UserRequestDto requestDto = new UserRequestDto("Test User", "test@example.com", 99L);
+        UserRequestDto requestDto = new UserRequestDto("admin@email.com", "s3cr3t", 99L);
         when(roleRepository.findById(99L)).thenReturn(Optional.empty());
 
         // Act & Assert
@@ -173,10 +173,10 @@ class DefaultUserServiceTest {
     @Test
     void updateUser_whenUserAndRoleExist_shouldUpdateAndReturnDto() {
         // Arrange
-        UserRequestDto updateDto = new UserRequestDto("Updated Name", "updated@email.com", 2L);
+        UserRequestDto updateDto = new UserRequestDto("admin@email.com", "s3cr3t", 2L);
         Role newRole = new Role("USER", "Regular user");
         newRole.setId(2L);
-        UserResponseDto updatedResponse = new UserResponseDto(1L, "Updated Name", "updated@email.com", null);
+        UserResponseDto updatedResponse = new UserResponseDto(1L, "admin@email.com", "new-s3cr3t", null);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(roleRepository.findById(2L)).thenReturn(Optional.of(newRole));
@@ -188,14 +188,14 @@ class DefaultUserServiceTest {
         // Assert
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).update(userCaptor.capture());
-        assertThat(userCaptor.getValue().getName()).isEqualTo("Updated Name");
+        assertThat(userCaptor.getValue().getUsername()).isEqualTo("admin@email.com");
         assertThat(userCaptor.getValue().getRole().getId()).isEqualTo(2L);
     }
 
     @Test
     void updateUser_whenUserNotFound_shouldThrowException() {
         // Arrange
-        UserRequestDto updateDto = new UserRequestDto("Updated Name", "updated@email.com", 1L);
+        UserRequestDto updateDto = new UserRequestDto("admin@email.com", "new-s3cr3t", 1L);
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
         // Act & Assert

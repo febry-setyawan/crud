@@ -47,7 +47,7 @@ class ResilientUserServiceTest {
 
         // Assert
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-        assertThat(result.name()).isEqualTo("Test User");
+        assertThat(result.username()).isEqualTo("Test User");
         assertThat(result.role().name()).isEqualTo("ADMIN"); // Verifikasi role
         verify(defaultUserService).getUserById(1L);
     }
@@ -73,7 +73,7 @@ class ResilientUserServiceTest {
         UserResponseDto fallbackResult = resilientUserService.getUserById(2L);
         
         // Assert: Pastikan metode fallback yang dipanggil
-        assertThat(fallbackResult.name()).isEqualTo("Fallback User");
+        assertThat(fallbackResult.username()).isEqualTo("fallback@example.com");
 
         // Verifikasi bahwa service dasar TIDAK dipanggil lagi
         verify(defaultUserService, times(10)).getUserById(anyLong());

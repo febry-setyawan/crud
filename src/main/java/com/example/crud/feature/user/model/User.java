@@ -5,32 +5,32 @@ import com.example.crud.common.model.BaseEntityAuditable;
 import com.example.crud.feature.role.model.Role;
 
 public class User extends BaseEntityAuditable<Long> {
-    private String name;
-    private String email;
+    private String username;
+    private String password;
     private Role role;
 
     // Constructors, Getters, Setters
     public User() {}
 
-    public User(String name, String email) {
-        this.name = name;
-        this.email = email;
-    }
-    
-    public String getName() {
-        return name;
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getUsername() {
+        return username;
     }
 
-    public String getEmail() {
-        return email;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public Role getRole() {
@@ -40,5 +40,4 @@ public class User extends BaseEntityAuditable<Long> {
     public void setRole(Role role) {
         this.role = role;
     }
-
-} 
+}

@@ -55,8 +55,8 @@ public class UserController {
     @GetMapping
     public ResponseEntity<Page<UserResponseDto>> getAllUsers(Pageable pageable, @RequestParam MultiValueMap<String, String> allParams) {
         UserFilterDto filter = new UserFilterDto();
-        filter.setName(allParams.getFirst("name"));
-        filter.setEmail(allParams.getFirst("email"));
+        filter.setUsername(allParams.getFirst("username"));
+        filter.setPassword(allParams.getFirst("password"));
 
         Page<UserResponseDto> page = userService.getAllUsers(pageable, filter);
         return ResponseEntity.ok(page);

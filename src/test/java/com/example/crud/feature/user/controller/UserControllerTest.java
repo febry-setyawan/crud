@@ -61,9 +61,9 @@ class UserControllerTest {
         RoleResponseDto roleDto = new RoleResponseDto(1L, "ADMIN", "Administrator");
 
         // Perbarui DTO User untuk menyertakan roleId dan RoleResponseDto
-        userRequestDto = new UserRequestDto("Test User", "test@example.com", 1L);
-        userResponseDto = new UserResponseDto(1L, "Test User", "test@example.com", roleDto);
-        updatedUserResponseDto = new UserResponseDto(1L, "Updated User", "updated@email.com", roleDto);
+        userRequestDto = new UserRequestDto("admin@email.com", "s3cr3t", 1L);
+        userResponseDto = new UserResponseDto(1L, "admin@email.com", "s3cr3t", roleDto);
+        updatedUserResponseDto = new UserResponseDto(1L, "updated@email.com", "new-s3cr3t", roleDto);
 
         Page<UserResponseDto> userPage = new PageImpl<>(List.of(userResponseDto));
 
@@ -86,7 +86,7 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(userRequestDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.name", is("Test User")))
+                .andExpect(jsonPath("$.username", is("admin@email.com")))
                 // Verifikasi data role di response
                 .andExpect(jsonPath("$.role.name", is("ADMIN")));
     }
@@ -104,7 +104,7 @@ class UserControllerTest {
     void getUserById_whenUserExists_shouldReturnUserWithRole() throws Exception {
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("Test User")))
+                .andExpect(jsonPath("$.username", is("admin@email.com")))
                 // Verifikasi data role
                 .andExpect(jsonPath("$.role.name", is("ADMIN")));
     }
@@ -112,14 +112,14 @@ class UserControllerTest {
     @Test
     void updateUser_whenUserExists_shouldReturnUpdatedUserWithRole() throws Exception {
         // Buat request DTO baru untuk update
-        UserRequestDto updateRequest = new UserRequestDto("Updated User", "updated@email.com", 1L);
+        UserRequestDto updateRequest = new UserRequestDto("admin@email.com", "new-s3cr3t", 1L);
 
         mockMvc.perform(put("/api/users/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("Updated User")))
+                .andExpect(jsonPath("$.username", is("updated@email.com")))
                 .andExpect(jsonPath("$.role.name", is("ADMIN")));
     }
 

@@ -62,7 +62,7 @@ public class ResilientUserService implements UserService {
 
     private UserResponseDto fallbackGetUserById(Long id, Throwable t) {
         log.error("Circuit breaker opened for getUserById: {}", id, t);
-        return new UserResponseDto(id, "Fallback User", "fallback@example.com", null);
+        return new UserResponseDto(id, "fallback@example.com", "******", null);
     }
 
     private Page<UserResponseDto> fallbackGetAllUsers(Pageable pageable, UserFilterDto filters, Throwable t) {

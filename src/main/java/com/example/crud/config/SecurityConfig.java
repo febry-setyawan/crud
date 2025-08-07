@@ -5,13 +5,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import com.example.crud.feature.auth.filter.JwtAuthenticationFilter;
+import com.example.crud.feature.auth.service.LoginService;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -29,7 +30,6 @@ import org.slf4j.LoggerFactory;
 public class SecurityConfig {
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
@@ -45,8 +45,8 @@ public class SecurityConfig {
                     "/swagger-ui/**", 
                     "/v3/api-docs/**", 
                     "/h2-console/**",
-                    "/actuator/**"
-                    , "/api/auth/**"
+                    "/actuator/**",
+                    "/api/auth/**"
                 ).permitAll()
                 // Semua request lain harus terotentikasi
                 .anyRequest().authenticated()
@@ -59,19 +59,14 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @SuppressWarnings("deprecation")
     @Bean
-    public InMemoryUserDetailsManager userDetailsService() {
-        // Buat user sederhana di memori untuk testing
-        // Use a fixed password for test compatibility
-        String password = "password";
-        log.debug("Using fixed password for user: {}", password);
-        UserDetails user = User.withDefaultPasswordEncoder()
-            .username("user")
-            .password(password)
-            .roles("USER")
-            .build();
-        return new InMemoryUserDetailsManager(user);
+    public LoginService loginService() {
+        return new LoginService();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Bean

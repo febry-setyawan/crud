@@ -56,11 +56,11 @@ public class DefaultUserService implements UserService {
     public Page<UserResponseDto> getAllUsers(Pageable pageable, UserFilterDto filter) {
         // Bangun map filter secara internal dari DTO
         Map<String, Object> filters = new HashMap<>();
-        if (filter.getName() != null && !filter.getName().isBlank()) {
-            filters.put("name", "%" + filter.getName() + "%");
+        if (filter.getUsername() != null && !filter.getUsername().isBlank()) {
+            filters.put("username", "%" + filter.getUsername() + "%");
         }
-        if (filter.getEmail() != null && !filter.getEmail().isBlank()) {
-            filters.put("description", "%" + filter.getEmail() + "%");
+        if (filter.getPassword() != null && !filter.getPassword().isBlank()) {
+            filters.put("password", "%" + filter.getPassword() + "%");
         }
 
         Page<User> userPage = userRepository.findAll(pageable, filters);
@@ -77,8 +77,8 @@ public class DefaultUserService implements UserService {
         Role role = roleRepository.findById(userDto.roleId())
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + userDto.roleId()));
 
-        existingUser.setName(userDto.name());
-        existingUser.setEmail(userDto.email());
+        existingUser.setUsername(userDto.username());
+        existingUser.setPassword(userDto.password());
         existingUser.setRole(role); // Update Role
         
         userRepository.update(existingUser);

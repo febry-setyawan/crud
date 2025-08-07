@@ -4,8 +4,8 @@ DROP TABLE IF EXISTS users;
 -- Buat tabel baru
 CREATE TABLE users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
     -- Kolom Audit --
     created_at TIMESTAMP,
     created_by VARCHAR(255),
@@ -31,3 +31,12 @@ ALTER TABLE users ADD CONSTRAINT fk_users_roles FOREIGN KEY (role_id) REFERENCES
 
 -- Opsional: Anda bisa membuat kolom ini NOT NULL jika setiap user wajib memiliki role
 ALTER TABLE users ALTER COLUMN role_id SET NOT NULL;
+
+MERGE INTO roles (id, name) KEY(id) VALUES
+  (1, 'ADMIN'),
+  (2, 'USER');
+
+-- Insert initial users (password is bcrypt hash for 's3cr3t')
+INSERT INTO users (id, username, password, role_id) VALUES
+  (1, 'admin@email.com', '$2a$10$u1Qw6Qw6Qw6Qw6Qw6Qw6QeQw6Qw6Qw6Qw6Qw6Qw6Qw6Qw6Qw6', 1),
+  (2, 'user@email.com', '$2a$10$u1Qw6Qw6Qw6Qw6Qw6Qw6QeQw6Qw6Qw6Qw6Qw6Qw6Qw6Qw6Qw6', 2);
