@@ -1,0 +1,22 @@
+{
+  "name": "crud-devcontainer",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "java.jdt.ls.java.home": "/usr/lib/jvm/java-21-openjdk",
+        "java.configuration.runtimes": [
+          {
+            "name": "JavaSE-21",
+            "path": "/usr/lib/jvm/java-21-openjdk",
+            "default": true
+          }
+        ]
+      }
+    }
+  },
+  "features": {},
+  "postCreateCommand": "java -version"
+}
