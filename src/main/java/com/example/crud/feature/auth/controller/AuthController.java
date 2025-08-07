@@ -1,7 +1,6 @@
 package com.example.crud.feature.auth.controller;
 
 import com.example.crud.feature.auth.dto.AuthRequest;
-import com.example.crud.feature.auth.dto.AuthResponse;
 import com.example.crud.feature.auth.dto.RefreshRequest;
 import com.example.crud.feature.auth.dto.RefreshResponse;
 import com.example.crud.feature.auth.service.JwtService;
