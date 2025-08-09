@@ -57,9 +57,9 @@ class JwtAuthenticationFilterTest {
         String username = "user";
         UserDetails userDetails = new User(username, "password", new ArrayList<>());
 
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtService.getUsernameFromToken(token)).thenReturn(username);
-        when(userDetailsService.loadUserByUsername(username)).thenReturn(userDetails);
+    when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+    when(jwtService.getUsernameFromToken(token)).thenReturn(username);
+    when(userDetailsService.loadUserByUsername(username)).thenReturn(userDetails);
 
         // When
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
