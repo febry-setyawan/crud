@@ -112,4 +112,22 @@ class RoleRepositoryTest {
         assertThat(updatedRole).isPresent();
         assertThat(updatedRole.get().getDescription()).isEqualTo("Updated description");
     }
+
+    @Test
+    void count_shouldReturnCorrectNumberOfRoles() {
+        long count = roleRepository.count();
+        assertThat(count).isEqualTo(3);
+    }
+
+    @Test
+    void deleteById_shouldRemoveRole() {
+        Role roleToDelete = roleRepository.findAll(PageRequest.of(0, 10), Map.of()).getContent().stream()
+            .filter(r -> r.getName().equals("MANAGER")).findFirst().orElseThrow();
+
+        int deletedRows = roleRepository.deleteById(roleToDelete.getId());
+        Optional<Role> deletedRole = roleRepository.findById(roleToDelete.getId());
+
+        assertThat(deletedRows).isEqualTo(1);
+        assertThat(deletedRole).isNotPresent();
+    }
 }
