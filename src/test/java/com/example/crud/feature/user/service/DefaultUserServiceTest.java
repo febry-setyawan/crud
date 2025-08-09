@@ -147,6 +147,19 @@ class DefaultUserServiceTest {
     }
 
     @Test
+    void createUser_whenRoleNotFound_shouldThrowException() {
+        // Arrange
+        UserRequestDto requestDto = new UserRequestDto("test@example.com", "password", 99L);
+        when(roleRepository.findById(99L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.createUser(requestDto);
+        });
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+    @Test
     void getUserById_whenUserExists_shouldReturnDto() {
         // Arrange
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
