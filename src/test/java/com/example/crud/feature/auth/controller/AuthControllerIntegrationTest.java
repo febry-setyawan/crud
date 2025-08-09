@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import com.example.crud.feature.auth.dto.AuthRequest;
 import com.example.crud.feature.auth.dto.RefreshRequest;
+import com.example.crud.feature.auth.dto.RefreshResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,14 +75,13 @@ class AuthControllerIntegrationTest {
                                 .andExpect(status().isOk())
                                 .andReturn();
                 String loginJson = loginResult.getResponse().getContentAsString();
-                String accessToken = objectMapper.readTree(loginJson).get("accessToken").asText();
-                String refreshToken = objectMapper.readTree(loginJson).get("refreshToken").asText();
-                assertThat(accessToken).isNotBlank();
-                assertThat(refreshToken).isNotBlank();
+                RefreshResponse loginResponse = objectMapper.readValue(loginJson, RefreshResponse.class);
+                assertThat(loginResponse.getAccessToken()).isNotBlank();
+                assertThat(loginResponse.getRefreshToken()).isNotBlank();
 
                 // 2. Refresh
                 RefreshRequest refreshRequest = new RefreshRequest();
-                refreshRequest.setRefreshToken(refreshToken);
+                refreshRequest.setRefreshToken(loginResponse.getRefreshToken());
                 MvcResult refreshResult = mockMvc.perform(post("/api/auth/refresh")
                                 .with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -89,15 +89,13 @@ class AuthControllerIntegrationTest {
                                 .andExpect(status().isOk())
                                 .andReturn();
                 String refreshJson = refreshResult.getResponse().getContentAsString();
-                String newAccessToken = objectMapper.readTree(refreshJson).get("accessToken").asText();
-                String newRefreshToken = objectMapper.readTree(refreshJson).get("refreshToken").asText();
-                assertThat(newAccessToken).isNotBlank();
-                assertThat(newRefreshToken).isNotBlank();
-                assertThat(newRefreshToken).isNotEqualTo(refreshToken); // Rotation
+                RefreshResponse refreshResponse = objectMapper.readValue(refreshJson, RefreshResponse.class);
+                assertThat(refreshResponse.getAccessToken()).isNotBlank();
+                assertThat(refreshResponse.getRefreshToken()).isNotBlank().isNotEqualTo(loginResponse.getRefreshToken());
 
                 // 3. Logout
                 RefreshRequest logoutRequest = new RefreshRequest();
-                logoutRequest.setRefreshToken(newRefreshToken);
+                logoutRequest.setRefreshToken(refreshResponse.getRefreshToken());
                 mockMvc.perform(post("/api/auth/logout")
                                 .with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -112,3 +110,4 @@ class AuthControllerIntegrationTest {
                                 .andExpect(status().is4xxClientError());
         }
 }
+
