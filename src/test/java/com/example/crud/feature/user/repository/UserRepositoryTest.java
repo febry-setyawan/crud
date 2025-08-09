@@ -147,4 +147,10 @@ class UserRepositoryTest {
         assertThat(updatedUser.get().getUpdatedAt()).isNotNull();
         assertThat(updatedUser.get().getUpdatedBy()).isEqualTo("test-user");
     }
+
+    @Test
+    void count_shouldReturnCorrectNumberOfUsers() {
+        long count = userRepository.count();
+        assertThat(count).isEqualTo(3);
+    }
 }
