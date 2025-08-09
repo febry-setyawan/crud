@@ -27,7 +27,11 @@ import java.util.Optional;
 import java.util.Set;
 
 @Repository
+
+@Repository
 public class UserRepository extends AbstractJdbcRepository<User, Long> implements UserDetailsService{
+
+    private static final String USERNAME = "username";
 
     private static final Logger logger = LoggerFactory.getLogger(UserRepository.class);
 
@@ -77,7 +81,7 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
     protected Map<String, Object> getUpdateParameters(User user) {
         // Gunakan LinkedHashMap untuk menjaga urutan, penting untuk SimpleJdbcInsert
         Map<String, Object> params = new LinkedHashMap<>();
-        params.put("username", user.getUsername());
+    params.put(USERNAME, user.getUsername());
         params.put("password", user.getPassword());
         if (user.getRole() != null) {
             params.put("role_id", user.getRole().getId());
@@ -93,7 +97,7 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
     @Override
     protected Set<String> getAllowedSortColumns() {
         // Daftarkan semua kolom yang boleh digunakan untuk sorting
-        return Set.of("id", "username", "password");
+    return Set.of("id", USERNAME, "password");
     }
 
     @Override
@@ -127,8 +131,8 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
             if (filters != null && !filters.isEmpty()) {
                 // Gunakan key 'username' untuk filter ke kolom tabel, bukan alias
                 filters.forEach((k, v) -> {
-                    if (k.equals("username")) {
-                        actualFilters.put("username", v);
+                    if (k.equals(USERNAME)) {
+                        actualFilters.put(USERNAME, v);
                     } else {
                         actualFilters.put(k, v);
                     }
@@ -181,7 +185,7 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = this.findAll(PageRequest.of(0, 1), Map.of("username", username))
+    User user = this.findAll(PageRequest.of(0, 1), Map.of(USERNAME, username))
             .getContent().stream().findFirst()
             .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         logger.debug("loadUserByUsername: found user: username={}, passwordHash={}, role={}", user.getUsername(), user.getPassword(), user.getRole() != null ? user.getRole().getName() : null);

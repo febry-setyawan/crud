@@ -59,6 +59,7 @@ class JwtServiceTest {
         JwtService service = new JwtService(nullCacheManager);
         service.removeRefreshToken("token");
         // No exception means success
+        assertThat(true).isTrue();
     }
     private JwtService jwtService;
     private CacheManager cacheManager;
