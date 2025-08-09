@@ -10,6 +10,31 @@ import static org.mockito.Mockito.*;
 
 class JwtServiceTest {
     @Test
+    void generateToken_and_getUsernameFromToken_shouldWork() throws Exception {
+        // Arrange
+        String username = "testuser";
+        String secret = "mySecretKey1234567890";
+        long expiration = 3600000L;
+        JwtService service = new JwtService(mock(CacheManager.class));
+
+        // Use reflection to set private fields
+        java.lang.reflect.Field secretField = JwtService.class.getDeclaredField("jwtSecret");
+        secretField.setAccessible(true);
+        secretField.set(service, secret);
+
+        java.lang.reflect.Field expField = JwtService.class.getDeclaredField("jwtExpirationMs");
+        expField.setAccessible(true);
+        expField.set(service, expiration);
+
+        // Act
+        String token = service.generateToken(username);
+        String extracted = service.getUsernameFromToken(token);
+
+        // Assert
+        assertThat(token).isNotBlank();
+        assertThat(extracted).isEqualTo(username);
+    }
+    @Test
     void generateRefreshToken_shouldNotThrow_whenCacheIsNull() {
         CacheManager nullCacheManager = mock(CacheManager.class);
         when(nullCacheManager.getCache("refreshTokens")).thenReturn(null);

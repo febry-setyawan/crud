@@ -33,6 +33,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @WithMockUser("test-user")
 class UserRepositoryTest {
     @Test
+    void findAll_withInvalidSortColumn_shouldNotThrow() {
+        Pageable pageable = PageRequest.of(0, 3, Sort.by("nonexistent").ascending());
+        // Should not throw, but may ignore the sort or fallback
+        Page<User> result = userRepository.findAll(pageable, Map.of());
+        assertThat(result.getContent()).isNotNull();
+    }
+    @Test
     void findById_whenUserNotFound_shouldReturnEmptyOptional() {
         Optional<User> result = userRepository.findById(9999L);
         assertThat(result).isEmpty();
