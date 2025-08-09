@@ -28,20 +28,19 @@ public class AuthenticationService {
 
     public RefreshResponse login(AuthRequest authRequest) {
     try {
-        logger.debug("login: authenticating username={}, password={} (plain)", authRequest.getUsername(), authRequest.getPassword());
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
                 authRequest.getUsername(),
                 authRequest.getPassword()
             )
         );
-        logger.debug("login: authentication success for username={}", authRequest.getUsername());
+    // logger.debug("login: authentication success for username={}", authRequest.getUsername()); // Removed for security best practice
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String accessToken = jwtService.generateToken(authRequest.getUsername());
         String refreshToken = jwtService.generateRefreshToken(authRequest.getUsername());
         return new RefreshResponse(accessToken, refreshToken);
     } catch (Exception e) {
-        logger.debug("login: authentication failed for username={}, error={}", authRequest.getUsername(), e.getMessage());
+    // logger.debug("login: authentication failed for username={}, error={}", authRequest.getUsername(), e.getMessage()); // Removed for security best practice
         throw e;
     }
     }   

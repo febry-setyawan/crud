@@ -2,8 +2,6 @@
 package com.example.crud.feature.user.repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
 import com.example.crud.common.repository.AbstractJdbcRepository;
 import com.example.crud.feature.role.model.Role;
 import com.example.crud.feature.user.model.User;
@@ -21,7 +19,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Repository;
 import javax.sql.DataSource;
-
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;

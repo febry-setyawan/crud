@@ -18,9 +18,7 @@ class JwtServiceTest {
         cacheManager = mock(CacheManager.class);
         cache = mock(Cache.class);
         when(cacheManager.getCache("refreshTokens")).thenReturn(cache);
-        jwtService = new JwtService();
-        // Inject mock cacheManager
-        org.springframework.test.util.ReflectionTestUtils.setField(jwtService, "cacheManager", cacheManager);
+        jwtService = new JwtService(cacheManager);
     }
 
     @Test

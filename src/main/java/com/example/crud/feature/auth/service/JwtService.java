@@ -25,8 +25,13 @@ public class JwtService {
     @Value("${jwt.refreshExpirationMs}")
     private long refreshExpirationMs;
 
-    @Autowired
-    private CacheManager cacheManager;
+
+    private final CacheManager cacheManager;
+
+
+    public JwtService(CacheManager cacheManager) {
+        this.cacheManager = cacheManager;
+    }
 
     public CacheManager getCacheManager() {
         return cacheManager;
