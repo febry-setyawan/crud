@@ -47,8 +47,7 @@ public class AuditTrailAspectTest {
     @WithMockUser(username = "testuser")
     void beforeSave_shouldSetAuditFields_whenUserIsAuthenticated() {
         // Given
-        AuditableTestEntity entity = new AuditableTestEntity();
-        entity.setName("New Entity");
+        AuditableTestEntity entity = new AuditableTestEntity(null, "New Entity");
 
         // When
         AuditableTestEntity savedEntity = auditableTestEntityRepository.save(entity);
@@ -64,8 +63,7 @@ public class AuditTrailAspectTest {
     void beforeSave_shouldSetSystemAsUser_whenUserIsAnonymous() {
         // Given
         SecurityContextHolder.clearContext();
-        AuditableTestEntity entity = new AuditableTestEntity();
-        entity.setName("New Entity");
+        AuditableTestEntity entity = new AuditableTestEntity(null, "New Entity");
 
         // When
         AuditableTestEntity savedEntity = auditableTestEntityRepository.save(entity);
@@ -83,7 +81,7 @@ public class AuditTrailAspectTest {
     @WithMockUser(username = "update_user")
     void beforeUpdate_shouldUpdateAuditFields_withMockUser() throws InterruptedException {
         // Given
-        AuditableTestEntity entity = auditableTestEntityRepository.save(new AuditableTestEntity(0L,"Initial Name"));
+        AuditableTestEntity entity = auditableTestEntityRepository.save(new AuditableTestEntity(0L, "Initial Name"));
         LocalDateTime initialUpdatedAt = entity.getUpdatedAt();
 
         // When

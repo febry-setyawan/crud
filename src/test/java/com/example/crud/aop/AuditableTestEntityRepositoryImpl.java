@@ -31,9 +31,10 @@ public class AuditableTestEntityRepositoryImpl extends AbstractJdbcRepository<Au
     @Override
     protected RowMapper<AuditableTestEntity> getRowMapper() {
         return (rs, rowNum) -> {
-            AuditableTestEntity entity = new AuditableTestEntity();
-            entity.setId(rs.getLong("id"));
-            entity.setName(rs.getString("name"));
+            AuditableTestEntity entity = new AuditableTestEntity(
+                rs.getLong("id"),
+                rs.getString("name")
+            );
             entity.setCreatedAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null);
             entity.setCreatedBy(rs.getString("created_by"));
             entity.setUpdatedAt(rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null);
@@ -44,13 +45,13 @@ public class AuditableTestEntityRepositoryImpl extends AbstractJdbcRepository<Au
 
     @Override
     protected Map<String, Object> getUpdateParameters(AuditableTestEntity entity) {
-    Map<String, Object> params = new HashMap<>();
-    params.put("name", entity.getName());
-    params.put("created_at", entity.getCreatedAt());
-    params.put("created_by", entity.getCreatedBy());
-    params.put("updated_at", entity.getUpdatedAt());
-    params.put("updated_by", entity.getUpdatedBy());
-    return params;
+        Map<String, Object> params = new HashMap<>();
+        params.put("name", entity.getName());
+        params.put("created_at", entity.getCreatedAt());
+        params.put("created_by", entity.getCreatedBy());
+        params.put("updated_at", entity.getUpdatedAt());
+        params.put("updated_by", entity.getUpdatedBy());
+        return params;
     }
 
     @Override

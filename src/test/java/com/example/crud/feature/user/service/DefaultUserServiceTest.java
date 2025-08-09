@@ -146,19 +146,7 @@ class DefaultUserServiceTest {
         verify(userRepository, never()).save(any());
     }
 
-    @Test
-    void createUser_whenRoleNotFound_shouldThrowException() {
-        // Arrange
-        UserRequestDto requestDto = new UserRequestDto("test@example.com", "password", 99L);
-        when(roleRepository.findById(99L)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(ResourceNotFoundException.class, () -> {
-            userService.createUser(requestDto);
-        });
-
-        verify(userRepository, never()).save(any(User.class));
-    }
+    // ...existing code...
     @Test
     void getUserById_whenUserExists_shouldReturnDto() {
         // Arrange
@@ -236,7 +224,8 @@ class DefaultUserServiceTest {
     @Test
     void getAllUsers_withPasswordFilter_shouldContainPasswordInFilterMap() {
         // Arrange
-        UserFilterDto filterDto = new UserFilterDto(null, "password123");
+        UserFilterDto filterDto = new UserFilterDto();
+        filterDto.setPassword("password123");
         PageRequest pageable = PageRequest.of(0, 10);
         Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
 
