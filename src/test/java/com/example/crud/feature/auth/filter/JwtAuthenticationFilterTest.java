@@ -17,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,6 +27,25 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class JwtAuthenticationFilterTest {
+    @Test
+    void doFilterInternal_shouldNotOverwriteAuthentication_whenAlreadySet() throws ServletException, IOException {
+        // Given
+        String token = "validToken";
+        String username = "user";
+        UserDetails userDetails = new User(username, "password", new ArrayList<>());
+        // Set an existing authentication in the context
+        UsernamePasswordAuthenticationToken existingAuth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(existingAuth);
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+        when(jwtService.getUsernameFromToken(token)).thenReturn(username);
+
+        // When
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+
+        // Then: Should not overwrite existing authentication
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isSameAs(existingAuth);
+        verify(filterChain).doFilter(request, response);
+    }
     @Test
     void doFilterInternal_shouldNotAuthenticate_whenAuthHeaderDoesNotStartWithBearer() throws ServletException, IOException {
         // Ensure clean context
