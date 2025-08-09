@@ -32,6 +32,9 @@ import java.util.Set;
 @Repository
 public class UserRepository extends AbstractJdbcRepository<User, Long> implements UserDetailsService{
 
+    private static final String USERNAME_FIELD = "username";
+    private static final String PASSWORD_FIELD = "password";
+
     private static final Logger logger = LoggerFactory.getLogger(UserRepository.class);
 
     private static final RowMapper<User> USER_ROW_MAPPER = (rs, rowNum) -> {
