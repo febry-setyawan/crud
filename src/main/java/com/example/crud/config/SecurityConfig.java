@@ -65,11 +65,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // @Bean
-    // public AuthenticationService authenticationService() {
-    //     return new AuthenticationService();
-    // }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         logger.debug("Creating PasswordEncoder: BCryptPasswordEncoder");

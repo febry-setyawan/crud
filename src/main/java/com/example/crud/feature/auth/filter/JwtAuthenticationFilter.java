@@ -2,7 +2,6 @@ package com.example.crud.feature.auth.filter;
 
 import com.example.crud.feature.auth.service.JwtService;
 import io.jsonwebtoken.JwtException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
