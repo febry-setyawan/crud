@@ -3,13 +3,12 @@ package com.example.crud.feature.auth.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
+import com.example.crud.feature.auth.exception.InvalidRefreshTokenException;
 import com.example.crud.feature.auth.dto.AuthRequest;
 import com.example.crud.feature.auth.dto.RefreshResponse;
 
@@ -27,30 +26,26 @@ public class AuthenticationService {
     }
 
     public RefreshResponse login(AuthRequest authRequest) {
-    try {
-        logger.debug("login: authenticating username={}, password={} (plain)", authRequest.getUsername(), authRequest.getPassword());
+        logger.debug("Authenticating username={}", authRequest.getUsername());
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
                 authRequest.getUsername(),
                 authRequest.getPassword()
             )
         );
-        logger.debug("login: authentication success for username={}", authRequest.getUsername());
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String accessToken = jwtService.generateToken(authRequest.getUsername());
         String refreshToken = jwtService.generateRefreshToken(authRequest.getUsername());
+        logger.info("Login successful for username={}", authRequest.getUsername());
         return new RefreshResponse(accessToken, refreshToken);
-    } catch (Exception e) {
-        logger.debug("login: authentication failed for username={}, error={}", authRequest.getUsername(), e.getMessage());
-        throw e;
     }
-    }   
 
     public RefreshResponse refresh(String refreshToken) {
         String username = jwtService.getCacheManager().getCache("refreshTokens").get(refreshToken, String.class);
         if (username == null) {
-            throw new RuntimeException("Invalid refresh token");
+            throw new InvalidRefreshTokenException("Invalid or expired refresh token");
         }
+        logger.info("Refreshing token for username={}", username);
         jwtService.removeRefreshToken(refreshToken);
         String newAccessToken = jwtService.generateToken(username);
         String newRefreshToken = jwtService.generateRefreshToken(username);
@@ -59,5 +54,7 @@ public class AuthenticationService {
 
     public void logout(String refreshToken) {
         jwtService.removeRefreshToken(refreshToken);
+        logger.info("User logged out and refresh token invalidated");
     }
 }
+
