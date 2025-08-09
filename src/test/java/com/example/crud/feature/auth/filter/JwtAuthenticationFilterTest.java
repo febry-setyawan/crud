@@ -26,6 +26,34 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class JwtAuthenticationFilterTest {
+    @Test
+    void doFilterInternal_shouldNotAuthenticate_whenAuthHeaderDoesNotStartWithBearer() throws ServletException, IOException {
+        // Given
+        when(request.getHeader("Authorization")).thenReturn("Token somethingelse");
+
+        // When
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+
+        // Then
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verify(filterChain).doFilter(request, response);
+    }
+    @Test
+    void doFilterInternal_shouldNotAuthenticate_whenUserDetailsIsNull() throws ServletException, IOException {
+        // Given
+        String token = "validToken";
+        String username = "user";
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+        when(jwtService.getUsernameFromToken(token)).thenReturn(username);
+        when(userDetailsService.loadUserByUsername(username)).thenReturn(null);
+
+        // When
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+
+        // Then
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verify(filterChain).doFilter(request, response);
+    }
 
     @AfterEach
     void clearSecurityContext() {
