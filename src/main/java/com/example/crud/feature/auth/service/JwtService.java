@@ -2,7 +2,6 @@ package com.example.crud.feature.auth.service;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
@@ -25,9 +24,11 @@ public class JwtService {
     @Value("${jwt.refreshExpirationMs}")
     private long refreshExpirationMs;
 
-    @Autowired
-    private CacheManager cacheManager;
+    private final CacheManager cacheManager;
 
+    public JwtService(CacheManager cacheManager) {
+        this.cacheManager = cacheManager;
+    }
     public CacheManager getCacheManager() {
         return cacheManager;
     }
