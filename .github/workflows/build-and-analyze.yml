@@ -32,13 +32,13 @@ jobs:
           distribution: 'temurin'
 
       # 3. Cache dependensi Maven untuk mempercepat build
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+      # - name: Cache Maven packages
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ~/.m2/repository
+      #     key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-maven-
 
       # 4. Build, jalankan tes (untuk generate JaCoCo report), dan kirim ke SonarCloud
       - name: Build, Test and Analyze with Maven
