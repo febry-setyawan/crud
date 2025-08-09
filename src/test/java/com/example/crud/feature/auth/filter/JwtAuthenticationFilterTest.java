@@ -100,12 +100,12 @@ class JwtAuthenticationFilterTest {
 
     @Test
     void doFilterInternal_shouldNotAuthenticate_whenUserIsNotFound() throws ServletException, IOException {
-        // Given
-        String token = "validToken";
-        String username = "unknownUser";
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtService.getUsernameFromToken(token)).thenReturn(username);
-        when(userDetailsService.loadUserByUsername(username)).thenReturn(null);
+
+    // Given
+    String token = "validToken";
+    String username = "unknownUser";
+    when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+    when(jwtService.getUsernameFromToken(token)).thenReturn(username);
 
         // When
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
