@@ -32,6 +32,28 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class DefaultUserServiceTest {
     @Test
+    void getAllUsers_withUsernameAndPasswordFilter_shouldContainBothInFilterMap() {
+        // Arrange
+        UserFilterDto filterDto = new UserFilterDto();
+        filterDto.setUsername("user1");
+        filterDto.setPassword("pass1");
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
+
+        when(userRepository.findAll(eq(pageable), anyMap())).thenReturn(userPage);
+
+        // Act
+        userService.getAllUsers(pageable, filterDto);
+
+        // Assert
+        verify(userRepository).findAll(eq(pageable), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+        assertThat(capturedMap).containsKey("username");
+        assertThat(capturedMap).containsKey("password");
+        assertThat(capturedMap.get("username")).isEqualTo("%user1%");
+        assertThat(capturedMap.get("password")).isEqualTo("%pass1%");
+    }
+    @Test
     void createUser_whenRequestDtoIsNull_shouldThrowException() {
         // Act & Assert
         assertThrows(NullPointerException.class, () -> {
