@@ -1,4 +1,8 @@
+
 package com.example.crud.aop;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.example.crud.common.model.Auditable;
 import org.aspectj.lang.JoinPoint;
@@ -14,6 +18,8 @@ import java.time.LocalDateTime;
 @Component
 public class AuditTrailAspect {
 
+    private static final Logger logger = LoggerFactory.getLogger(AuditTrailAspect.class);
+
     /**
      * Pointcut ini akan menargetkan semua metode save() yang menerima satu argumen (entity)
      * di dalam kelas mana pun yang mengimplementasikan GenericRepository.
@@ -23,7 +29,7 @@ public class AuditTrailAspect {
         if (entity instanceof Auditable auditableEntity) {
             String currentUser = getCurrentUsername();
             LocalDateTime now = LocalDateTime.now();
-            
+            logger.debug("[AuditTrailAspect] beforeSave - currentUser: {}", currentUser);
             auditableEntity.setCreatedAt(now);
             auditableEntity.setCreatedBy(currentUser);
             auditableEntity.setUpdatedAt(now); // Saat create, updated = created
@@ -34,15 +40,16 @@ public class AuditTrailAspect {
     /**
      * Pointcut ini menargetkan metode update().
      */
-    @Before("execution(* com.example.crud.common.repository.GenericRepository.update(..)) && args(entity)")
-    public void beforeUpdate(JoinPoint joinPoint, Object entity) {
+    @org.aspectj.lang.annotation.Around("execution(* com.example.crud.common.repository.GenericRepository.update(..)) && args(entity)")
+    public Object aroundUpdate(org.aspectj.lang.ProceedingJoinPoint pjp, Object entity) throws Throwable {
         if (entity instanceof Auditable auditableEntity) {
             String currentUser = getCurrentUsername();
             LocalDateTime now = LocalDateTime.now();
-
+            logger.debug("[AuditTrailAspect] aroundUpdate - currentUser: {}", currentUser);
             auditableEntity.setUpdatedAt(now);
             auditableEntity.setUpdatedBy(currentUser);
         }
+        return pjp.proceed();
     }
 
     /**

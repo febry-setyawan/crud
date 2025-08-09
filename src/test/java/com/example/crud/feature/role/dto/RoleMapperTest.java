@@ -13,15 +13,14 @@ class RoleMapperTest {
     @Test
     void toEntity() {
         // Given
-        RoleRequestDto roleRequestDto = new RoleRequestDto();
-        roleRequestDto.setName("Test Role");
+        RoleRequestDto roleRequestDto = new RoleRequestDto("Test Role", null);
 
         // When
         Role role = roleMapper.toEntity(roleRequestDto);
 
         // Then
         assertThat(role).isNotNull();
-        assertThat(role.getName()).isEqualTo(roleRequestDto.getName());
+        assertThat(role.getName()).isEqualTo(roleRequestDto.name());
     }
 
     @Test
@@ -35,4 +34,6 @@ class RoleMapperTest {
 
         // Then
         assertThat(roleResponseDto).isNotNull();
-        assertThat(roleResponseDto.getName()).isEqualTo(role.getName());
+        assertThat(roleResponseDto.name()).isEqualTo(role.getName());
+    }
+}

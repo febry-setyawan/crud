@@ -1,4 +1,7 @@
+
 package com.example.crud.feature.user.repository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import com.example.crud.common.repository.AbstractJdbcRepository;
@@ -29,11 +32,14 @@ import java.util.Set;
 @Repository
 public class UserRepository extends AbstractJdbcRepository<User, Long> implements UserDetailsService{
 
+    private static final Logger logger = LoggerFactory.getLogger(UserRepository.class);
+
     private static final RowMapper<User> USER_ROW_MAPPER = (rs, rowNum) -> {
         User user = new User();
         user.setId(rs.getLong("id"));
-        user.setUsername(rs.getString("username"));        
-        user.setPassword(rs.getString("password"));
+        // Ambil dari alias query: user_name dan user_password
+        user.setUsername(rs.getString("user_name"));
+        user.setPassword(rs.getString("user_password"));
         // Mapping kolom audit
         user.setCreatedAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null);
         user.setCreatedBy(rs.getString("created_by"));
@@ -120,13 +126,22 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
         return TimerUtil.time("findAll", () -> {
             // --- Count Query (No change needed here) ---
             StringBuilder countSql = new StringBuilder("SELECT count(*) FROM %s u".formatted(getTableName()));
+            Map<String, Object> actualFilters = new LinkedHashMap<>();
             if (filters != null && !filters.isEmpty()) {
-                String whereClause = buildWhereClause(filters, "u"); // Pass alias 'u'
+                // Gunakan key 'username' untuk filter ke kolom tabel, bukan alias
+                filters.forEach((k, v) -> {
+                    if (k.equals("username")) {
+                        actualFilters.put("username", v);
+                    } else {
+                        actualFilters.put(k, v);
+                    }
+                });
+                String whereClause = buildWhereClause(actualFilters, "u");
                 countSql.append(" WHERE ").append(whereClause);
             }
-            logQuery(countSql.toString(), filters);
+            logQuery(countSql.toString(), actualFilters);
             Long totalElements = jdbcClient.sql(countSql.toString())
-                                        .params(filters)
+                                        .params(actualFilters)
                                         .query(Long.class)
                                         .single();
 
@@ -141,19 +156,19 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
                 LEFT JOIN roles r ON u.role_id = r.id
             """).stripIndent().trim());
 
-            if (filters != null && !filters.isEmpty()) {
-                String whereClause = buildWhereClause(filters, "u"); // Pass alias 'u'
+            if (!actualFilters.isEmpty()) {
+                String whereClause = buildWhereClause(actualFilters, "u");
                 dataSql.append(" WHERE ").append(whereClause);
             }
 
-            String sortClause = buildSortClause(pageable.getSort(), "u"); // Pass alias 'u'
+            String sortClause = buildSortClause(pageable.getSort(), "u");
             if (!sortClause.isEmpty()) {
                 dataSql.append(" ORDER BY ").append(sortClause);
             }
 
             dataSql.append(" LIMIT :limit OFFSET :offset");
 
-            Map<String, Object> queryParams = new LinkedHashMap<>(filters != null ? filters : Map.of());
+            Map<String, Object> queryParams = new LinkedHashMap<>(actualFilters);
             queryParams.put("limit", pageable.getPageSize());
             queryParams.put("offset", pageable.getOffset());
 
@@ -172,6 +187,7 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
         User user = this.findAll(PageRequest.of(0, 1), Map.of("username", username))
             .getContent().stream().findFirst()
             .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        logger.debug("loadUserByUsername: found user: username={}, passwordHash={}, role={}", user.getUsername(), user.getPassword(), user.getRole() != null ? user.getRole().getName() : null);
         String roleName = user.getRole() != null ? user.getRole().getName() : "USER";
         GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + roleName);
         return org.springframework.security.core.userdetails.User

@@ -1,4 +1,8 @@
+
 package com.example.crud.feature.auth.controller;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.example.crud.feature.auth.dto.AuthRequest;
 import com.example.crud.feature.auth.dto.RefreshRequest;
@@ -26,6 +30,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @ActiveProfiles("dev")
 
 class AuthControllerIntegrationTest {
+        private static final Logger logger = LoggerFactory.getLogger(AuthControllerIntegrationTest.class);
         @Autowired
         private MockMvc mockMvc;
         @Autowired
@@ -39,9 +44,9 @@ class AuthControllerIntegrationTest {
                 // Log metadata kolom tabel users
                 jdbcTemplate.query("SELECT * FROM users WHERE 1=0", rs -> {
                         java.sql.ResultSetMetaData meta = rs.getMetaData();
-                        System.out.println("[DEBUG] Kolom tabel users:");
+                        logger.debug("[DEBUG] Kolom tabel users:");
                         for (int i = 1; i <= meta.getColumnCount(); i++) {
-                                System.out.println("[DEBUG] - " + meta.getColumnName(i));
+                                logger.debug("[DEBUG] - {}", meta.getColumnName(i));
                         }
                         return null;
                 });

@@ -1,4 +1,7 @@
+
 package com.example.crud.feature.auth.service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,6 +16,8 @@ import com.example.crud.feature.auth.dto.RefreshResponse;
 @Service
 public class AuthenticationService {
 
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
+
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
@@ -22,20 +27,23 @@ public class AuthenticationService {
     }
 
     public RefreshResponse login(AuthRequest authRequest) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            authRequest.getUsername(),
-                            authRequest.getPassword()
-                    )
-            );
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            String accessToken = jwtService.generateToken(authRequest.getUsername());
-            String refreshToken = jwtService.generateRefreshToken(authRequest.getUsername());
-            return new RefreshResponse(accessToken, refreshToken);
-        } catch (Exception e) {
-            throw e;
-        }
+    try {
+        logger.debug("login: authenticating username={}, password={} (plain)", authRequest.getUsername(), authRequest.getPassword());
+        Authentication authentication = authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(
+                authRequest.getUsername(),
+                authRequest.getPassword()
+            )
+        );
+        logger.debug("login: authentication success for username={}", authRequest.getUsername());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String accessToken = jwtService.generateToken(authRequest.getUsername());
+        String refreshToken = jwtService.generateRefreshToken(authRequest.getUsername());
+        return new RefreshResponse(accessToken, refreshToken);
+    } catch (Exception e) {
+        logger.debug("login: authentication failed for username={}, error={}", authRequest.getUsername(), e.getMessage());
+        throw e;
+    }
     }   
 
     public RefreshResponse refresh(String refreshToken) {

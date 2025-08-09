@@ -150,7 +150,7 @@ class UserRepositoryTest {
 
     @Test
     void count_shouldReturnCorrectNumberOfUsers() {
-        long count = userRepository.count();
+        long count = userRepository.findAll(PageRequest.of(0, 10), Map.of()).getTotalElements();
         assertThat(count).isEqualTo(3);
     }
 }

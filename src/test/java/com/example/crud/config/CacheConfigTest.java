@@ -37,10 +37,10 @@ class CacheConfigTest {
 
         // When
         // First call - should hit the database
-        roleService.findById(roleId);
+    roleService.getRoleById(roleId);
 
         // Second call - should hit the cache
-        roleService.findById(roleId);
+    roleService.getRoleById(roleId);
 
         // Then
         // Verify that the repository method was only called once

@@ -31,3 +31,5 @@ public class TestController {
     public static class TestDto {
         @NotBlank
         private String name;
+    }
+}

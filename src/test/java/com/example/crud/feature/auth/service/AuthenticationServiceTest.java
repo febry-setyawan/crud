@@ -101,3 +101,4 @@ class AuthenticationServiceTest {
         authenticationService.logout("someToken");
         verify(jwtService).removeRefreshToken("someToken");
     }
+}

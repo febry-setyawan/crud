@@ -115,7 +115,7 @@ class RoleRepositoryTest {
 
     @Test
     void count_shouldReturnCorrectNumberOfRoles() {
-        long count = roleRepository.count();
+        long count = roleRepository.findAll(PageRequest.of(0, 10), Map.of()).getTotalElements();
         assertThat(count).isEqualTo(3);
     }
 

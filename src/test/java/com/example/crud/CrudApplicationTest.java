@@ -14,3 +14,4 @@ class CrudApplicationTest {
     void main() {
         CrudApplication.main(new String[]{});
     }
+}

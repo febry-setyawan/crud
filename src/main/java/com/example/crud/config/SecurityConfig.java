@@ -1,5 +1,11 @@
 package com.example.crud.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.example.crud.feature.user.repository.UserRepository;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,6 +23,18 @@ import org.springframework.security.config.annotation.authentication.configurati
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        logger.debug("Creating DaoAuthenticationProvider with UserRepository={} and PasswordEncoder={}", userRepository.getClass().getName(), passwordEncoder.getClass().getName());
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userRepository);
+        authProvider.setPasswordEncoder(passwordEncoder);
+        return authProvider;
+    }
+
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
@@ -54,11 +72,13 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+        logger.debug("Creating PasswordEncoder: BCryptPasswordEncoder");
         return new BCryptPasswordEncoder();
     }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        logger.debug("Creating AuthenticationManager from AuthenticationConfiguration: {}", authenticationConfiguration.getClass().getName());
         return authenticationConfiguration.getAuthenticationManager();
     }
 }

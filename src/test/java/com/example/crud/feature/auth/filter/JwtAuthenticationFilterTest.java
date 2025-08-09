@@ -1,4 +1,6 @@
+
 package com.example.crud.feature.auth.filter;
+import org.junit.jupiter.api.AfterEach;
 
 import com.example.crud.feature.auth.service.JwtService;
 import io.jsonwebtoken.JwtException;
@@ -24,6 +26,11 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class JwtAuthenticationFilterTest {
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Mock
     private JwtService jwtService;
@@ -107,3 +114,4 @@ class JwtAuthenticationFilterTest {
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
         verify(filterChain).doFilter(request, response);
     }
+}

@@ -12,10 +12,11 @@ import org.springframework.data.relational.core.mapping.Table;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table("test_auditable_entity")
-public class AuditableTestEntity extends BaseEntityAuditable {
+public class AuditableTestEntity extends BaseEntityAuditable<Long> {
     private String name;
 
     public AuditableTestEntity(Long id, String name) {
         this.setId(id);
         this.name = name;
     }
+}
