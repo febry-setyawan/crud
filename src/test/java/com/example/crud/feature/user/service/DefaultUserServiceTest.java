@@ -246,7 +246,7 @@ class DefaultUserServiceTest {
         userService.getAllUsers(pageable, filterDto);
 
         // Assert
-        verify(userRepository).findAll(eq(pageacle), mapCaptor.capture());
+        verify(userRepository).findAll(eq(pageable), mapCaptor.capture());
         Map<String, Object> capturedMap = mapCaptor.getValue();
         assertThat(capturedMap).containsKey("password");
         assertThat(capturedMap.get("password")).isEqualTo("%password123%");
