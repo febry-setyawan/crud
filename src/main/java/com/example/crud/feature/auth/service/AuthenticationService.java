@@ -16,8 +16,6 @@ import com.example.crud.feature.auth.dto.RefreshResponse;
 @Service
 public class AuthenticationService {
 
-    private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
-
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
@@ -34,13 +32,11 @@ public class AuthenticationService {
                 authRequest.getPassword()
             )
         );
-    // logger.debug("login: authentication success for username={}", authRequest.getUsername()); // Removed for security best practice
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String accessToken = jwtService.generateToken(authRequest.getUsername());
         String refreshToken = jwtService.generateRefreshToken(authRequest.getUsername());
         return new RefreshResponse(accessToken, refreshToken);
     } catch (Exception e) {
-    // logger.debug("login: authentication failed for username={}, error={}", authRequest.getUsername(), e.getMessage()); // Removed for security best practice
         throw e;
     }
     }   
@@ -48,7 +44,7 @@ public class AuthenticationService {
     public RefreshResponse refresh(String refreshToken) {
         String username = jwtService.getCacheManager().getCache("refreshTokens").get(refreshToken, String.class);
         if (username == null) {
-            throw new RuntimeException("Invalid refresh token");
+            throw new InvalidRefreshTokenException("Invalid refresh token");
         }
         jwtService.removeRefreshToken(refreshToken);
         String newAccessToken = jwtService.generateToken(username);

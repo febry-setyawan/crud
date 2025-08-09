@@ -27,8 +27,6 @@ import java.util.Optional;
 import java.util.Set;
 
 @Repository
-
-@Repository
 public class UserRepository extends AbstractJdbcRepository<User, Long> implements UserDetailsService{
 
     private static final String USERNAME = "username";
