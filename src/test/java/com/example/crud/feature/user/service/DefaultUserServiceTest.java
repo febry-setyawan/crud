@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -146,6 +147,19 @@ class DefaultUserServiceTest {
     }
 
     @Test
+    void createUser_whenRoleNotFound_shouldThrowException() {
+        // Arrange
+        UserRequestDto requestDto = new UserRequestDto("test@example.com", "password", 99L);
+        when(roleRepository.findById(99L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.createUser(requestDto);
+        });
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+    @Test
     void getUserById_whenUserExists_shouldReturnDto() {
         // Arrange
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
@@ -203,5 +217,50 @@ class DefaultUserServiceTest {
             userService.updateUser(99L, updateDto);
         });
         verify(roleRepository, never()).findById(anyLong());
+    }
+
+    @Test
+    void updateUser_whenRoleNotFound_shouldThrowException() {
+        // Arrange
+        UserRequestDto updateDto = new UserRequestDto("admin@email.com", "new-s3cr3t", 99L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(roleRepository.findById(99L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.updateUser(1L, updateDto);
+        });
+        verify(userRepository, never()).update(any(User.class));
+    }
+
+    @Test
+    void getAllUsers_withPasswordFilter_shouldContainPasswordInFilterMap() {
+        // Arrange
+        UserFilterDto filterDto = new UserFilterDto(null, "password123");
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
+
+        when(userRepository.findAll(eq(pageable), anyMap())).thenReturn(userPage);
+
+        // Act
+        userService.getAllUsers(pageable, filterDto);
+
+        // Assert
+        verify(userRepository).findAll(eq(pageable), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+        assertThat(capturedMap).containsKey("password");
+        assertThat(capturedMap.get("password")).isEqualTo("%password123%");
+    }
+
+    @Test
+    void deleteUser_whenUserNotFound_shouldReturnFalse() {
+        // Arrange
+        when(userRepository.deleteById(99L)).thenReturn(0);
+
+        // Act
+        boolean result = userService.deleteUser(99L);
+
+        // Assert
+        assertFalse(result);
     }
 }
