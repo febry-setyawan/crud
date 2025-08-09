@@ -31,6 +31,47 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DefaultUserServiceTest {
+    @Test
+    void createUser_whenRequestDtoIsNull_shouldThrowException() {
+        // Act & Assert
+        assertThrows(NullPointerException.class, () -> {
+            userService.createUser(null);
+        });
+    }
+
+    @Test
+    void updateUser_whenRequestDtoIsNull_shouldThrowException() {
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.updateUser(1L, null);
+        });
+    }
+
+    @Test
+    void getUserById_whenIdIsNull_shouldThrowException() {
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.getUserById(null);
+        });
+    }
+
+    @Test
+    void deleteUser_whenIdIsNull_shouldReturnFalse() {
+        // Act
+        boolean result = userService.deleteUser(null);
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void deleteUser_whenIdIsNegative_shouldReturnFalse() {
+        // Arrange
+        when(userRepository.deleteById(-1L)).thenReturn(0);
+        // Act
+        boolean result = userService.deleteUser(-1L);
+        // Assert
+        assertFalse(result);
+    }
 
     @Mock
     private UserRepository userRepository;

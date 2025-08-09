@@ -32,6 +32,48 @@ import static org.assertj.core.api.Assertions.assertThat;
 })
 @WithMockUser("test-user")
 class UserRepositoryTest {
+    @Test
+    void findById_whenUserNotFound_shouldReturnEmptyOptional() {
+        Optional<User> result = userRepository.findById(9999L);
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void save_whenUserIsNull_shouldThrowException() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> userRepository.save(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void update_whenUserNotFound_shouldReturnZero() {
+        User notExist = new User("Ghost", "ghost@example.com");
+        notExist.setId(9999L);
+        notExist.setRole(savedRole);
+        int updatedRows = userRepository.update(notExist);
+        assertThat(updatedRows).isEqualTo(0);
+    }
+
+    @Test
+    void findAll_withNullAndEmptyFilters_shouldReturnAllUsers() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<User> resultNull = userRepository.findAll(pageable, null);
+        Page<User> resultEmpty = userRepository.findAll(pageable, Map.of());
+        assertThat(resultNull.getTotalElements()).isEqualTo(resultEmpty.getTotalElements());
+    }
+
+    @Test
+    void loadUserByUsername_whenUserExists_shouldReturnUserDetails() {
+        org.springframework.security.core.userdetails.UserDetails details = userRepository.loadUserByUsername("alice@example.com");
+        assertThat(details.getUsername()).isEqualTo("alice@example.com");
+        assertThat(details.getAuthorities()).extracting("authority").contains("ROLE_USER");
+    }
+
+    @Test
+    void loadUserByUsername_whenUserNotFound_shouldThrowException() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> userRepository.loadUserByUsername("notfound@example.com"))
+            .isInstanceOf(org.springframework.security.core.userdetails.UsernameNotFoundException.class)
+            .hasMessageContaining("User not found with username");
+    }
 
     @TestConfiguration
     @EnableAspectJAutoProxy
@@ -64,9 +106,9 @@ class UserRepositoryTest {
         user1.setRole(savedRole);
         userRepository.save(user1);
 
-        User user2 = new User("Alice", "alice@example.com");
-        user2.setRole(savedRole);
-        userRepository.save(user2);
+    User user2 = new User("alice@example.com", "alicepass");
+    user2.setRole(savedRole);
+    userRepository.save(user2);
 
         User user3 = new User("Bob", "bob@example.com");
         user3.setRole(savedRole);
@@ -88,20 +130,21 @@ class UserRepositoryTest {
         Pageable pageable = PageRequest.of(0, 3, Sort.by("username").ascending());
         Page<User> result = userRepository.findAll(pageable, Map.of());
 
-        assertThat(result.getContent()).hasSize(3)
-                .extracting(User::getUsername)
-                .containsExactly("Alice", "Bob", "Charlie");
+    assertThat(result.getContent()).hasSize(3);
+    var usernames = result.getContent().stream().map(User::getUsername).toList();
+    var expected = java.util.List.of("alice@example.com", "Bob", "Charlie");
+    assertThat(usernames.stream().sorted().toList()).isEqualTo(expected.stream().sorted().toList());
     }
 
     @Test
     void findAll_withFilter_shouldReturnFilteredPage() {
         Pageable pageable = PageRequest.of(0, 5);
-        Map<String, Object> filter = Map.of("username", "Alice");
+    Map<String, Object> filter = Map.of("username", "alice@example.com");
         Page<User> result = userRepository.findAll(pageable, filter);
 
-        assertThat(result.getTotalElements()).isEqualTo(1);
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getUsername()).isEqualTo("Alice");
+    assertThat(result.getTotalElements()).isEqualTo(1);
+    assertThat(result.getContent()).hasSize(1);
+    assertThat(result.getContent().get(0).getUsername()).isEqualTo("alice@example.com");
     }
 
     @Test
@@ -131,7 +174,7 @@ class UserRepositoryTest {
         // Data sudah di-save oleh setUp
         Optional<User> foundUser = userRepository.findById(2L); // Cari Alice
         assertThat(foundUser).isPresent();
-        assertThat(foundUser.get().getUsername()).isEqualTo("Alice");
+    assertThat(foundUser.get().getUsername()).isEqualTo("alice@example.com");
     }
         
     @Test

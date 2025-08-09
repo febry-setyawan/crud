@@ -9,6 +9,32 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 class JwtServiceTest {
+    @Test
+    void generateRefreshToken_shouldNotThrow_whenCacheIsNull() {
+        CacheManager nullCacheManager = mock(CacheManager.class);
+        when(nullCacheManager.getCache("refreshTokens")).thenReturn(null);
+        JwtService service = new JwtService(nullCacheManager);
+        String token = service.generateRefreshToken("user");
+        assertThat(token).isNotBlank();
+    }
+
+    @Test
+    void validateRefreshToken_shouldReturnFalse_whenCacheIsNull() {
+        CacheManager nullCacheManager = mock(CacheManager.class);
+        when(nullCacheManager.getCache("refreshTokens")).thenReturn(null);
+        JwtService service = new JwtService(nullCacheManager);
+        boolean valid = service.validateRefreshToken("token", "user");
+        assertThat(valid).isFalse();
+    }
+
+    @Test
+    void removeRefreshToken_shouldNotThrow_whenCacheIsNull() {
+        CacheManager nullCacheManager = mock(CacheManager.class);
+        when(nullCacheManager.getCache("refreshTokens")).thenReturn(null);
+        JwtService service = new JwtService(nullCacheManager);
+        service.removeRefreshToken("token");
+        // No exception means success
+    }
     private JwtService jwtService;
     private CacheManager cacheManager;
     private Cache cache;
