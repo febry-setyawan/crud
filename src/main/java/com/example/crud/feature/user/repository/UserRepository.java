@@ -1,4 +1,3 @@
-
 package com.example.crud.feature.user.repository;
 
 import com.example.crud.common.repository.AbstractJdbcRepository;
@@ -27,9 +26,10 @@ import java.util.Set;
 
 @Repository
 public class UserRepository extends AbstractJdbcRepository<User, Long> implements UserDetailsService {
-
+    
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
+    private static final Set<String> ALLOWED_FILTER_COLUMNS = Set.of(USERNAME, "role_id", PASSWORD);
 
     static final RowMapper<User> USER_ROW_MAPPER = (rs, rowNum) -> {
         User user = new User();
@@ -156,9 +156,10 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
                     } else if (v instanceof Number) {
                         actualFilters.put("role_id", v);
                     }
-                } else {
+                } else if (ALLOWED_FILTER_COLUMNS.contains(k)) {
                     actualFilters.put(k, v);
                 }
+                // Jika tidak termasuk kolom yang diizinkan, abaikan
             });
         }
         return actualFilters;

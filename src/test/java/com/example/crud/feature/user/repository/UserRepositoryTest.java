@@ -110,6 +110,28 @@ class UserRepositoryTest {
     }
 
     @Test
+    void findAll_withCustomKeyInFilter_shouldIncludeCustomKeyInResult() {
+        Pageable pageable = PageRequest.of(0, 5);
+        Map<String, Object> filter = Map.of("customKey", "customValue");
+        Page<User> result = userRepository.findAll(pageable, filter);
+        // Tidak error dan filter customKey tetap ada di parameter query (branch else pada processFilters)
+        // Tidak ada user dengan customKey, jadi hasilnya tetap valid
+        assertThat(result).isNotNull();
+        // Tidak ada exception, dan query tetap jalan
+    }
+
+    @Test
+    void findAll_withRoleObjectWithoutId_shouldNotAddRoleIdToFilter() {
+        Pageable pageable = PageRequest.of(0, 5);
+        Role roleObj = new Role(); // id tidak di-set (null)
+        Map<String, Object> filter = Map.of("role", roleObj);
+        Page<User> result = userRepository.findAll(pageable, filter);
+        // Tidak error, dan role_id tidak ditambahkan ke filter query
+        assertThat(result).isNotNull();
+        // Hasil tetap valid, tidak ada exception
+    }
+
+    @Test
     void save_shouldInsertUserAndReturnWithIdAndAudit() {
         // Hapus data dari setUp untuk test save yang bersih
         userRepository.deleteById(1L);

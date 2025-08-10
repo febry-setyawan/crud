@@ -70,7 +70,6 @@ class DefaultUserServiceTest {
         userResponseDto = new UserResponseDto(1L, "Test User", "test@example.com", null);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     void getAllUsers_withFilter_shouldBuildMapWithWildcardsAndCallRepository() {
         // Arrange
@@ -78,7 +77,7 @@ class DefaultUserServiceTest {
         filterDto.setUsername("admin@email.com"); // Filter dengan 'admin@email.com'
 
         Page<User> userPage = new PageImpl<>(List.of(user));
-        when(userRepository.findAll(any(), any(Map.class))).thenReturn(userPage);
+        when(userRepository.findAll(any(), anyMap())).thenReturn(userPage);
         when(userMapper.toDto(any(User.class))).thenReturn(userResponseDto);
 
         // Act
@@ -96,13 +95,12 @@ class DefaultUserServiceTest {
                 .containsEntry("username", "%admin@email.com%");
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     void getAllUsers_withNoFilter_shouldCallRepositoryWithEmptyMap() {
         // Arrange
         UserFilterDto emptyFilter = new UserFilterDto(); // DTO filter kosong
         Page<User> userPage = new PageImpl<>(List.of(user));
-        when(userRepository.findAll(any(), any(Map.class))).thenReturn(userPage);
+        when(userRepository.findAll(any(), anyMap())).thenReturn(userPage);
         when(userMapper.toDto(any(User.class))).thenReturn(userResponseDto);
 
         // Act
@@ -112,6 +110,24 @@ class DefaultUserServiceTest {
         verify(userRepository).findAll(any(), mapCaptor.capture());
         // Pastikan map yang dikirim ke repository kosong
         assertThat(mapCaptor.getValue()).isEmpty();
+    }
+
+    @Test
+    void getAllUsers_withBlankUsername_shouldNotAddUsernameToFilterMap() {
+        // Arrange
+        UserFilterDto filterDto = new UserFilterDto();
+        filterDto.setUsername("   "); // username blank
+        Page<User> userPage = new PageImpl<>(List.of(user));
+        when(userRepository.findAll(any(), anyMap())).thenReturn(userPage);
+        when(userMapper.toDto(any(User.class))).thenReturn(userResponseDto);
+
+        // Act
+        userService.getAllUsers(PageRequest.of(0, 1), filterDto);
+
+        // Assert
+        verify(userRepository).findAll(any(), mapCaptor.capture());
+        // Pastikan map yang dikirim ke repository tidak mengandung key 'username'
+        assertThat(mapCaptor.getValue()).doesNotContainKey("username");
     }
 
     @Test
