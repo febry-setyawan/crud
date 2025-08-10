@@ -137,10 +137,9 @@ Proyek ini sudah menyertakan script k6 (`script.js`) untuk performance/load test
     ```
 
 ### Menjalankan k6 ke k6 Cloud:
-    ```bash
-    k6 cloud script.js
-    ```
-
+    
+    k6 run script.js
+    
 Hasil test akan muncul di terminal atau dashboard k6 cloud.
 
 ---
