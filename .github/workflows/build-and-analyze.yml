@@ -52,3 +52,21 @@ jobs:
           -Dsonar.projectKey=febry-setyawan_crud
           -Dsonar.organization=${{ secrets.ORG_KEY }}
           -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+
+      # 5. Install k6
+      - name: Install k6
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg ca-certificates
+          curl -s https://dl.k6.io/key.gpg | sudo apt-key add -
+          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+      # 6. Jalankan k6 performance test di k6 Cloud
+      - name: Run k6 performance test (k6 Cloud)
+        env:
+          K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
+        run: |
+          k6 login cloud --token $K6_CLOUD_TOKEN
+          k6 cloud script.js
