@@ -162,6 +162,9 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
     protected String buildSortClause(Sort sort, String alias) {
         return sort.stream()
                 .map(order -> {
+                    if (order == null || order.getProperty() == null) {
+                        return null;
+                    }
                     if (getAllowedSortColumns().contains(order.getProperty())) {
                         // Gunakan alias yang diberikan
                         return alias + "." + order.getProperty() + " " + (order.isAscending() ? "ASC" : "DESC");
