@@ -27,6 +27,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import org.springframework.data.domain.PageImpl;
 import java.util.List;
@@ -330,5 +331,21 @@ class UserRepositoryTest {
         UserDetails details = UserRepository.buildUserDetails(user);
         assertThat(details.getUsername()).isEqualTo("unitnorole");
         assertThat(details.getAuthorities()).extracting("authority").containsExactly("ROLE_USER");
+    }
+
+    @Test
+    void findAll_withPasswordFilter_shouldIncludePasswordInActualFilters() {
+        Pageable pageable = PageRequest.of(0, 5);
+        Map<String, Object> filter = Map.of("password", "somepass");
+        Page<User> result = userRepository.findAll(pageable, filter);
+        assertThat(result).isNotNull();
+    }
+
+    @Test
+    void findAll_withRoleIdFilter_shouldIncludeRoleIdInActualFilters() {
+        Pageable pageable = PageRequest.of(0, 5);
+        Map<String, Object> filter = Map.of("role_id", 2L);
+        Page<User> result = userRepository.findAll(pageable, filter);
+        assertThat(result).isNotNull();
     }
 }
