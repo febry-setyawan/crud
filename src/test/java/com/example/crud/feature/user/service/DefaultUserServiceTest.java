@@ -410,4 +410,34 @@ class DefaultUserServiceTest {
         // Assert
         assertThat(result).isTrue();
     }
+
+    @Test
+    void updateUser_whenRequestDtoFieldsAreNull_shouldThrowException() {
+        // Arrange
+        UserRequestDto updateDto = new UserRequestDto(null, null, null); // Semua field null
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        // Tidak perlu stubbing roleRepository.findById(null)
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.updateUser(1L, updateDto);
+        });
+    }
+
+    @Test
+    void updateUser_whenRequestDtoUsernameAndPasswordBlank_shouldUpdateAndReturnDto() {
+        // Arrange
+        UserRequestDto updateDto = new UserRequestDto("   ", "   ", 1L); // username dan password blank
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(roleRepository.findById(1L)).thenReturn(Optional.of(role));
+        when(userMapper.toDto(any(User.class))).thenReturn(userResponseDto);
+
+        // Act
+        userService.updateUser(1L, updateDto);
+
+        // Assert
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).update(userCaptor.capture());
+        assertThat(userCaptor.getValue().getUsername()).isEqualTo("   "); // Di-set blank sesuai implementasi
+        assertThat(userCaptor.getValue().getPassword()).isEqualTo("   "); // Di-set blank sesuai implementasi
+    }
 }

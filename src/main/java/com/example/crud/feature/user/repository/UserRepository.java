@@ -31,7 +31,7 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
 
-    private static final RowMapper<User> USER_ROW_MAPPER = (rs, rowNum) -> {
+    static final RowMapper<User> USER_ROW_MAPPER = (rs, rowNum) -> {
         User user = new User();
         user.setId(rs.getLong("id"));
         // Ambil dari alias query: user_name dan user_password

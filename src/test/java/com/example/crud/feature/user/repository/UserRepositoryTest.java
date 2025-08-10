@@ -234,4 +234,48 @@ class UserRepositoryTest {
         assertThat(result.getTotalElements()).isEqualTo(3); // Semua user di-setup dengan role id=2
         assertThat(result.getContent()).allMatch(u -> u.getRole() != null && u.getRole().getId() == 2L);
     }
+
+    @Test
+    void getUpdateParameters_shouldHandleUserWithoutRole() {
+        UserRepository repo = org.mockito.Mockito.mock(UserRepository.class, org.mockito.Mockito.CALLS_REAL_METHODS);
+        User user = new User("NoRole", "norole@example.com");
+        // Tidak set role
+        java.util.Map<String, Object> params = repo.getUpdateParameters(user);
+        assertThat(params)
+            .containsEntry("username", "NoRole")
+            .containsEntry("password", "norole@example.com")
+            .doesNotContainKey("role_id");
+    }
+
+    @Test
+    void findAll_withRoleFilterAsString_shouldIgnoreAndReturnAll() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Map<String, Object> filter = Map.of("role", "notARole");
+        Page<User> result = userRepository.findAll(pageable, filter);
+        // Harus tetap jalan, role string diabaikan
+        assertThat(result.getContent()).isNotNull();
+    }
+
+    @Test
+    void findAll_withoutSort_shouldNotThrow() {
+        Page<User> result = userRepository.findAll(PageRequest.of(0, 10), Map.of());
+        assertThat(result.getContent()).isNotNull();
+    }
+
+    @Test
+    void userRowMapper_shouldHandleNullRoleId() throws Exception {
+        // Simulasi ResultSet dengan role_id null
+        java.sql.ResultSet rs = org.mockito.Mockito.mock(java.sql.ResultSet.class);
+        org.mockito.Mockito.when(rs.getLong("id")).thenReturn(123L);
+        org.mockito.Mockito.when(rs.getString("user_username")).thenReturn("mockuser");
+        org.mockito.Mockito.when(rs.getString("user_password")).thenReturn("mockpass");
+        org.mockito.Mockito.when(rs.getTimestamp("created_at")).thenReturn(null);
+        org.mockito.Mockito.when(rs.getString("created_by")).thenReturn(null);
+        org.mockito.Mockito.when(rs.getTimestamp("updated_at")).thenReturn(null);
+        org.mockito.Mockito.when(rs.getString("updated_by")).thenReturn(null);
+        org.mockito.Mockito.when(rs.getObject("role_id")).thenReturn(null); // Explicitly return null for role_id
+        User user = UserRepository.USER_ROW_MAPPER.mapRow(rs, 0);
+        assertThat(user).isNotNull();
+        assertThat(user.getRole()).isNull();
+    }
 }
