@@ -34,7 +34,7 @@ import org.springframework.security.core.userdetails.UserDetails;
         "/db/migration/h2/V4__add_password_and_initial_users.sql"
 })
 @WithMockUser("test-user")
-class UserRepositoryTest {
+class UserRepositoryTest {    
 
     @TestConfiguration
     @EnableAspectJAutoProxy
@@ -221,5 +221,17 @@ class UserRepositoryTest {
                 .assertThatThrownBy(() -> userRepository.loadUserByUsername("notfound@example.com"))
                 .isInstanceOf(UsernameNotFoundException.class)
                 .hasMessageContaining("User not found with username");
+    }
+
+    @Test
+    void findAll_withRoleObject_shouldReturnFilteredPage() {
+        Pageable pageable = PageRequest.of(0, 5);
+        Role roleObj = new Role();
+        roleObj.setId(2L); // id role USER dari migration
+        Map<String, Object> filter = Map.of("role", roleObj);
+        Page<User> result = userRepository.findAll(pageable, filter);
+
+        assertThat(result.getTotalElements()).isEqualTo(3); // Semua user di-setup dengan role id=2
+        assertThat(result.getContent()).allMatch(u -> u.getRole() != null && u.getRole().getId() == 2L);
     }
 }

@@ -352,4 +352,62 @@ class DefaultUserServiceTest {
         // Assert
         assertFalse(result);
     }
+
+    @Test
+    void getAllUsers_withBlankPasswordAndNullRole_shouldNotAddToFilterMap() {
+        // Arrange
+        UserFilterDto filterDto = new UserFilterDto();
+        filterDto.setUsername("user1");
+        filterDto.setPassword("   "); // blank password
+        filterDto.setRole(null); // null role
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
+        when(userRepository.findAll(eq(pageable), anyMap())).thenReturn(userPage);
+
+        // Act
+        userService.getAllUsers(pageable, filterDto);
+
+        // Assert
+        verify(userRepository).findAll(eq(pageable), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+        assertThat(capturedMap)
+            .containsKey("username")
+            .doesNotContainKey("password")
+            .doesNotContainKey("role");
+    }
+
+    @Test
+    void getAllUsers_withNullPasswordAndBlankRole_shouldNotAddToFilterMap() {
+        // Arrange
+        UserFilterDto filterDto = new UserFilterDto();
+        filterDto.setUsername("user2");
+        filterDto.setPassword(null); // null password
+        Role blankRole = new Role();
+        blankRole.setId(null); // blank id
+        filterDto.setRole(blankRole);
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
+        when(userRepository.findAll(eq(pageable), anyMap())).thenReturn(userPage);
+
+        // Act
+        userService.getAllUsers(pageable, filterDto);
+
+        // Assert
+        verify(userRepository).findAll(eq(pageable), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+        assertThat(capturedMap)
+            .containsKey("username")
+            .doesNotContainKey("password")
+            .doesNotContainKey("role");
+    }
+
+    @Test
+    void deleteUser_whenUserFound_shouldReturnTrue() {
+        // Arrange
+        when(userRepository.deleteById(1L)).thenReturn(1);
+        // Act
+        boolean result = userService.deleteUser(1L);
+        // Assert
+        assertThat(result).isTrue();
+    }
 }
