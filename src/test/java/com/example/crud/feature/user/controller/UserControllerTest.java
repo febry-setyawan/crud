@@ -1,6 +1,5 @@
 package com.example.crud.feature.user.controller;
 
-
 import com.example.crud.common.exception.ResourceNotFoundException;
 import com.example.crud.feature.role.dto.RoleResponseDto;
 import com.example.crud.feature.user.dto.UserFilterDto;
@@ -32,7 +31,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -43,15 +41,16 @@ class UserControllerTest {
     void getAllUsers_withNonAdminRole_shouldReturnForbidden() throws Exception {
         // Mock service to return a valid page so validation passes
         when(userService.getAllUsers(any(Pageable.class), any(UserFilterDto.class)))
-            .thenReturn(new PageImpl<>(List.of()));
+                .thenReturn(new PageImpl<>(List.of()));
         var result = mockMvc.perform(get("/api/users?roleId=1"))
-            .andReturn();
+                .andReturn();
         System.out.println("DEBUG Forbidden Test Response: " + result.getResponse().getContentAsString());
         // Still assert forbidden for test result
         org.springframework.test.util.AssertionErrors.assertEquals(
-            "Status expected:<403> but was:<" + result.getResponse().getStatus() + ">",
-            403, result.getResponse().getStatus());
+                "Status expected:<403> but was:<" + result.getResponse().getStatus() + ">",
+                403, result.getResponse().getStatus());
     }
+
     @Test
     void getAllUsers_withInvalidRoleId_shouldReturnBadRequest() throws Exception {
         // roleId string, harusnya gagal validasi (bad request)
@@ -69,6 +68,7 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)));
     }
+
     @Test
     void getAllUsers_withUsernameAndRoleIdFilter_shouldReturnFilteredUsers() throws Exception {
         // Simulasi kombinasi filter username dan roleId
@@ -81,6 +81,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.content[0].username", is("admin@email.com")))
                 .andExpect(jsonPath("$.content[0].role.id", is(1)));
     }
+
     @Test
     void getAllUsers_withNonExistentRoleId_shouldReturnEmptyList() throws Exception {
         // Simulasi roleId yang tidak ada (misal, 999)
@@ -92,7 +93,6 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.content", hasSize(0)));
     }
 
-
     @Test
     void getAllUsers_withRoleIdFilter_shouldReturnFilteredUsers() throws Exception {
         // Simulasi filter roleId=1
@@ -103,10 +103,8 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.content[0].role.name", is("ADMIN")));
     }
 
-
     @Autowired
     private MockMvc mockMvc;
-
 
     @SuppressWarnings("removal")
     @MockBean
@@ -138,16 +136,17 @@ class UserControllerTest {
         when(userService.updateUser(eq(1L), any(UserRequestDto.class))).thenReturn(updatedUserResponseDto);
         when(userService.deleteUser(1L)).thenReturn(true);
         when(userService.getUserById(99L)).thenThrow(new ResourceNotFoundException("User not found with id: 99"));
-        when(userService.updateUser(eq(99L), any(UserRequestDto.class))).thenThrow(new ResourceNotFoundException("User not found with id: 99"));
+        when(userService.updateUser(eq(99L), any(UserRequestDto.class)))
+                .thenThrow(new ResourceNotFoundException("User not found with id: 99"));
         when(userService.deleteUser(99L)).thenReturn(false);
     }
 
     @Test
     void createUser_shouldReturnCreatedUserWithRole() throws Exception {
         mockMvc.perform(post("/api/users")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userRequestDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", is(1)))
                 .andExpect(jsonPath("$.username", is("admin@email.com")))
@@ -179,16 +178,13 @@ class UserControllerTest {
         UserRequestDto updateRequest = new UserRequestDto("admin@email.com", "new-s3cr3t", 1L);
 
         mockMvc.perform(put("/api/users/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRequest)))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username", is("updated@email.com")))
                 .andExpect(jsonPath("$.role.name", is("ADMIN")));
     }
-
-    // --- Test untuk skenario "Not Found" dan "Delete" tidak perlu diubah ---
-
 
     @Test
     void getUserById_whenUserDoesNotExist_shouldReturnNotFound() throws Exception {
@@ -197,13 +193,12 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message", is("User not found with id: 99")));
     }
 
-
     @Test
     void updateUser_whenUserDoesNotExist_shouldReturnNotFound() throws Exception {
         mockMvc.perform(put("/api/users/99")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequestDto)))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userRequestDto)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message", is("User not found with id: 99")));
     }
@@ -213,7 +208,6 @@ class UserControllerTest {
         mockMvc.perform(delete("/api/users/1").with(csrf()))
                 .andExpect(status().isNoContent());
     }
-
 
     @Test
     void deleteUser_whenUserDoesNotExist_shouldReturnNotFound() throws Exception {

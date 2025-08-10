@@ -17,11 +17,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class SecurityConfigTest {
+class SecurityConfigTest {
 
     @Autowired
     private MockMvc mockMvc;
 
+    @SuppressWarnings("removal")
     @MockBean
     private JwtService jwtService; // Mock JwtService to avoid JWT validation issues in tests
 
@@ -29,25 +30,27 @@ public class SecurityConfigTest {
     void setupJwtServiceMock() {
         // Return dummy tokens for any username
         when(jwtService.generateToken(org.mockito.ArgumentMatchers.anyString())).thenReturn("dummy-access-token");
-        when(jwtService.generateRefreshToken(org.mockito.ArgumentMatchers.anyString())).thenReturn("dummy-refresh-token");
+        when(jwtService.generateRefreshToken(org.mockito.ArgumentMatchers.anyString()))
+            .thenReturn("dummy-refresh-token");
     }
 
     @Test
     void shouldAllowPublicAccessToSwagger() throws Exception {
         mockMvc.perform(get("/swagger-ui/index.html"))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk());
     }
 
     @Test
     void shouldAllowPublicAccessToApiDocs() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk());
     }
 
     @Test
     void shouldAllowPublicAccessToH2Console() throws Exception {
         mockMvc.perform(get("/h2-console/"))
-            // H2 console resource tidak tersedia di test context, bisa 404 atau 2xx jika tersedia
+            // H2 console resource tidak tersedia di test context, bisa 404 atau 2xx jika
+            // tersedia
             .andExpect(result -> {
                 int status = result.getResponse().getStatus();
                 if (status != 200 && status != 404) {
@@ -59,18 +62,18 @@ public class SecurityConfigTest {
     @Test
     void shouldAllowPublicAccessToActuator() throws Exception {
         mockMvc.perform(get("/actuator/health"))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk());
     }
 
     @Test
     void shouldAllowPublicAccessToAuthEndpoints() throws Exception {
-    // Tambahkan CSRF agar lolos filter CSRF
-    mockMvc.perform(post("/api/auth/login")
-        .contentType("application/json")
-        .content("{\"username\":\"user@email.com\",\"password\":\"s3cr3t\"}")
-        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
-    )
-    .andExpect(status().isOk());
+        // Tambahkan CSRF agar lolos filter CSRF
+        mockMvc.perform(post("/api/auth/login")
+            .contentType("application/json")
+            .content("{\"username\":\"user@email.com\",\"password\":\"s3cr3t\"}")
+            .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
+                    .csrf()))
+            .andExpect(status().isOk());
     }
 
     @Test
@@ -78,6 +81,6 @@ public class SecurityConfigTest {
     void shouldAllowAccessToProtectedEndpoints_whenAuthenticated() throws Exception {
         // Always include a valid roleId to avoid validation errors
         mockMvc.perform(get("/api/users?roleId=1"))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk());
     }
 }

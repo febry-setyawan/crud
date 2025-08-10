@@ -1,4 +1,4 @@
-package com.example.crud.common.exception;
+package com.example.crud.common.dto;
 
 import java.time.LocalDateTime;
 

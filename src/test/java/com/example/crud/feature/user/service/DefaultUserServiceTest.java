@@ -48,11 +48,13 @@ class DefaultUserServiceTest {
         // Assert
         verify(userRepository).findAll(eq(pageable), mapCaptor.capture());
         Map<String, Object> capturedMap = mapCaptor.getValue();
-        assertThat(capturedMap).containsKey("username");
-        assertThat(capturedMap).containsKey("password");
+        assertThat(capturedMap)
+            .containsKey("username")
+            .containsKey("password")
+            .containsEntry("password", "%pass1%");
         assertThat(capturedMap.get("username")).isEqualTo("%user1%");
-        assertThat(capturedMap.get("password")).isEqualTo("%pass1%");
     }
+
     @Test
     void createUser_whenRequestDtoIsNull_shouldThrowException() {
         // Act & Assert
@@ -128,7 +130,8 @@ class DefaultUserServiceTest {
         user.setRole(role);
 
         // Siapkan DTO response
-        // Di dunia nyata, mapper akan menangani ini, tapi untuk mock kita definisikan manual
+        // Di dunia nyata, mapper akan menangani ini, tapi untuk mock kita definisikan
+        // manual
         userResponseDto = new UserResponseDto(1L, "Test User", "test@example.com", null);
     }
 
@@ -147,13 +150,15 @@ class DefaultUserServiceTest {
         userService.getAllUsers(PageRequest.of(0, 1), filterDto);
 
         // Assert
-        // Verifikasi bahwa service membangun Map dengan benar sebelum memanggil repository
+        // Verifikasi bahwa service membangun Map dengan benar sebelum memanggil
+        // repository
         verify(userRepository).findAll(any(), mapCaptor.capture());
         Map<String, Object> capturedMap = mapCaptor.getValue();
 
         // Pastikan service menambahkan wildcard '%' untuk pencarian LIKE
-        assertThat(capturedMap).hasSize(1);
-        assertThat(capturedMap.get("username")).isEqualTo("%admin@email.com%");
+        assertThat(capturedMap)
+            .hasSize(1)
+            .containsEntry("username", "%admin@email.com%");
     }
 
     @SuppressWarnings("unchecked")
@@ -300,8 +305,7 @@ class DefaultUserServiceTest {
         // Assert
         verify(userRepository).findAll(eq(pageable), mapCaptor.capture());
         Map<String, Object> capturedMap = mapCaptor.getValue();
-        assertThat(capturedMap).containsKey("password");
-        assertThat(capturedMap.get("password")).isEqualTo("%password123%");
+        assertThat(capturedMap).containsEntry("password", "%password123%");
     }
 
     @Test

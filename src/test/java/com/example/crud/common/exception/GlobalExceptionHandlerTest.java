@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = TestController.class)
 @Import(GlobalExceptionHandler.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class GlobalExceptionHandlerTest {
+class GlobalExceptionHandlerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -28,33 +28,32 @@ public class GlobalExceptionHandlerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @SuppressWarnings("removal")
     @MockBean
     private JwtService jwtService;
 
-    // Removed shouldHandleRuntimeException test: unhandled RuntimeExceptions now propagate as default 500 errors.
-
     @Test
     void shouldHandleResourceNotFoundException() throws Exception {
-    mockMvc.perform(get("/test/resource-not-found"))
-        .andExpect(status().isNotFound())
-        .andExpect(jsonPath("$.status").value(404))
-        .andExpect(jsonPath("$.error").value("Not Found"))
-        .andExpect(jsonPath("$.message").value("Test resource not found"))
-        .andExpect(jsonPath("$.path").value("/test/resource-not-found"));
+        mockMvc.perform(get("/test/resource-not-found"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Test resource not found"))
+                .andExpect(jsonPath("$.path").value("/test/resource-not-found"));
     }
 
     @Test
     void shouldHandleMethodArgumentNotValidException() throws Exception {
         TestController.TestDto testDto = new TestController.TestDto(); // name is null
 
-    mockMvc.perform(post("/test/validation-error")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(testDto)))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.status").value(400))
-        .andExpect(jsonPath("$.error").value("Validation Failed"))
-        .andExpect(jsonPath("$.message").value("{name=must not be blank}"))
-        .andExpect(jsonPath("$.path").value("/test/validation-error"));
+        mockMvc.perform(post("/test/validation-error")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(testDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Validation Failed"))
+                .andExpect(jsonPath("$.message").value("{name=must not be blank}"))
+                .andExpect(jsonPath("$.path").value("/test/validation-error"));
     }
 
     @Test
@@ -63,8 +62,8 @@ public class GlobalExceptionHandlerTest {
         testDto.setName("Valid Name");
 
         mockMvc.perform(post("/test/validation-error")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(testDto)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(testDto)))
                 .andExpect(status().isOk());
     }
 }

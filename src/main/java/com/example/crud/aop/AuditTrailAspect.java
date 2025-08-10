@@ -1,4 +1,3 @@
-
 package com.example.crud.aop;
 
 import org.slf4j.Logger;
@@ -21,7 +20,8 @@ public class AuditTrailAspect {
     private static final Logger logger = LoggerFactory.getLogger(AuditTrailAspect.class);
 
     /**
-     * Pointcut ini akan menargetkan semua metode save() yang menerima satu argumen (entity)
+     * Pointcut ini akan menargetkan semua metode save() yang menerima satu argumen
+     * (entity)
      * di dalam kelas mana pun yang mengimplementasikan GenericRepository.
      */
     @Before("execution(* com.example.crud.common.repository.GenericRepository.save(..)) && args(entity)")
@@ -55,11 +55,13 @@ public class AuditTrailAspect {
     /**
      * Mengambil username dari konteks keamanan Spring Security.
      * Untuk tujuan demo, kita akan hardcode jika tidak ada konteks keamanan.
+     * 
      * @return Nama pengguna saat ini atau "SYSTEM" jika tidak ditemukan.
      */
     private String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getName())) {
             return "SYSTEM";
         }
         return authentication.getName();

@@ -22,7 +22,8 @@ class RoleRepositoryTest {
     @TestConfiguration
     // Konfigurasi ini hanya mengimpor RoleRepository, tanpa Aspect audit
     @Import(RoleRepository.class)
-    static class TestRepoConfiguration {}
+    static class TestRepoConfiguration {
+    }
 
     @Autowired
     private RoleRepository roleRepository;
@@ -62,7 +63,7 @@ class RoleRepositoryTest {
     void findById_whenRoleExists_shouldReturnRole() {
         // Act
         Optional<Role> foundRole = roleRepository.findAll(PageRequest.of(0, 10), Map.of()).getContent().stream()
-            .filter(r -> r.getName().equals("SUPPORT")).findFirst();
+                .filter(r -> r.getName().equals("SUPPORT")).findFirst();
 
         // Assert
         assertThat(foundRole).isPresent();
@@ -100,7 +101,7 @@ class RoleRepositoryTest {
     void update_shouldModifyExistingRole() {
         // Arrange
         Role roleToUpdate = roleRepository.findAll(PageRequest.of(0, 10), Map.of()).getContent().stream()
-            .filter(r -> r.getName().equals("MANAGER")).findFirst().orElseThrow();
+                .filter(r -> r.getName().equals("MANAGER")).findFirst().orElseThrow();
         roleToUpdate.setDescription("Updated description");
 
         // Act
@@ -122,7 +123,7 @@ class RoleRepositoryTest {
     @Test
     void deleteById_shouldRemoveRole() {
         Role roleToDelete = roleRepository.findAll(PageRequest.of(0, 10), Map.of()).getContent().stream()
-            .filter(r -> r.getName().equals("MANAGER")).findFirst().orElseThrow();
+                .filter(r -> r.getName().equals("MANAGER")).findFirst().orElseThrow();
 
         int deletedRows = roleRepository.deleteById(roleToDelete.getId());
         Optional<Role> deletedRole = roleRepository.findById(roleToDelete.getId());

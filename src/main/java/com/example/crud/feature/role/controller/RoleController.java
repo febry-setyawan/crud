@@ -31,8 +31,8 @@ public class RoleController {
 
     @Operation(summary = "Membuat role baru", description = "Membuat satu data role baru dan menyimpannya ke database.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Role berhasil dibuat"),
-        @ApiResponse(responseCode = "400", description = "Input tidak valid")
+            @ApiResponse(responseCode = "201", description = "Role berhasil dibuat"),
+            @ApiResponse(responseCode = "400", description = "Input tidak valid")
     })
     @PostMapping
     public ResponseEntity<RoleResponseDto> createRole(@Valid @RequestBody RoleRequestDto roleDto) {
@@ -41,20 +41,21 @@ public class RoleController {
     }
 
     @Operation(summary = "Menampilkan semua role", description = "Mengambil daftar semua role dengan opsi filter, sort, dan pagination.")
-    @PageableAsQueryParam 
+    @PageableAsQueryParam
     @GetMapping
-    public ResponseEntity<Page<RoleResponseDto>> getAllRoles(Pageable pageable, @RequestParam MultiValueMap<String, String> allParams) {
+    public ResponseEntity<Page<RoleResponseDto>> getAllRoles(Pageable pageable,
+            @RequestParam MultiValueMap<String, String> allParams) {
         RoleFilterDto filter = new RoleFilterDto();
         filter.setName(allParams.getFirst("name"));
         filter.setDescription(allParams.getFirst("description"));
-        
+
         return ResponseEntity.ok(roleService.getAllRoles(pageable, filter));
     }
 
     @Operation(summary = "Menampilkan role berdasarkan ID", description = "Mengambil satu data role berdasarkan ID uniknya.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Role ditemukan"),
-        @ApiResponse(responseCode = "404", description = "Role dengan ID tersebut tidak ditemukan")
+            @ApiResponse(responseCode = "200", description = "Role ditemukan"),
+            @ApiResponse(responseCode = "404", description = "Role dengan ID tersebut tidak ditemukan")
     })
     @GetMapping("/{id}")
     public ResponseEntity<RoleResponseDto> getRoleById(@PathVariable Long id) {
@@ -63,18 +64,19 @@ public class RoleController {
 
     @Operation(summary = "Mengupdate role", description = "Memperbarui data role yang sudah ada berdasarkan ID.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Role berhasil diperbarui"),
-        @ApiResponse(responseCode = "404", description = "Role dengan ID tersebut tidak ditemukan")
+            @ApiResponse(responseCode = "200", description = "Role berhasil diperbarui"),
+            @ApiResponse(responseCode = "404", description = "Role dengan ID tersebut tidak ditemukan")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<RoleResponseDto> updateRole(@PathVariable Long id, @Valid @RequestBody RoleRequestDto roleDto) {
+    public ResponseEntity<RoleResponseDto> updateRole(@PathVariable Long id,
+            @Valid @RequestBody RoleRequestDto roleDto) {
         return ResponseEntity.ok(roleService.updateRole(id, roleDto));
     }
 
     @Operation(summary = "Menghapus role", description = "Menghapus satu data role berdasarkan ID.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Role berhasil dihapus"),
-        @ApiResponse(responseCode = "404", description = "Role dengan ID tersebut tidak ditemukan")
+            @ApiResponse(responseCode = "204", description = "Role berhasil dihapus"),
+            @ApiResponse(responseCode = "404", description = "Role dengan ID tersebut tidak ditemukan")
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRole(@PathVariable Long id) {

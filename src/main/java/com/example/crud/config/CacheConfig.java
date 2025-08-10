@@ -17,6 +17,7 @@ public class CacheConfig {
 
     @Value("${cache.maxSize:10000}")
     private int cacheMaxSize;
+
     @Bean
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager("refreshTokens", "users", "roles");

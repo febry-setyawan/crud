@@ -18,11 +18,7 @@ import org.slf4j.LoggerFactory;
 
 @Service
 @Primary
-@ConditionalOnProperty(
-    value="features.resilience.user.enabled", 
-    havingValue = "true", 
-    matchIfMissing = true
-)
+@ConditionalOnProperty(value = "features.resilience.user.enabled", havingValue = "true", matchIfMissing = true)
 public class ResilientUserService implements UserService {
 
     private static final Logger log = LoggerFactory.getLogger(ResilientUserService.class);

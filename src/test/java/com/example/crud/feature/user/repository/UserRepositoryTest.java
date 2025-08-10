@@ -25,10 +25,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JdbcTest
 @Import(UserRepositoryTest.TestRepoConfiguration.class)
 @Sql({
-    "/db/migration/h2/V1__Create_users_table.sql",
-    "/db/migration/h2/V2__Create_roles_table.sql",
-    "/db/migration/h2/V3__Add_role_id_to_users_table.sql",
-    "/db/migration/h2/V4__add_password_and_initial_users.sql"
+        "/db/migration/h2/V1__Create_users_table.sql",
+        "/db/migration/h2/V2__Create_roles_table.sql",
+        "/db/migration/h2/V3__Add_role_id_to_users_table.sql",
+        "/db/migration/h2/V4__add_password_and_initial_users.sql"
 })
 @WithMockUser("test-user")
 class UserRepositoryTest {
@@ -39,6 +39,7 @@ class UserRepositoryTest {
         Page<User> result = userRepository.findAll(pageable, Map.of());
         assertThat(result.getContent()).isNotNull();
     }
+
     @Test
     void findById_whenUserNotFound_shouldReturnEmptyOptional() {
         Optional<User> result = userRepository.findById(9999L);
@@ -48,7 +49,7 @@ class UserRepositoryTest {
     @Test
     void save_whenUserIsNull_shouldThrowException() {
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> userRepository.save(null))
-            .isInstanceOf(NullPointerException.class);
+                .isInstanceOf(NullPointerException.class);
     }
 
     @Test
@@ -57,7 +58,7 @@ class UserRepositoryTest {
         notExist.setId(9999L);
         notExist.setRole(savedRole);
         int updatedRows = userRepository.update(notExist);
-        assertThat(updatedRows).isEqualTo(0);
+        assertThat(updatedRows).isZero();
     }
 
     @Test
@@ -70,22 +71,25 @@ class UserRepositoryTest {
 
     @Test
     void loadUserByUsername_whenUserExists_shouldReturnUserDetails() {
-        org.springframework.security.core.userdetails.UserDetails details = userRepository.loadUserByUsername("alice@example.com");
+        org.springframework.security.core.userdetails.UserDetails details = userRepository
+                .loadUserByUsername("alice@example.com");
         assertThat(details.getUsername()).isEqualTo("alice@example.com");
         assertThat(details.getAuthorities()).extracting("authority").contains("ROLE_USER");
     }
 
     @Test
     void loadUserByUsername_whenUserNotFound_shouldThrowException() {
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> userRepository.loadUserByUsername("notfound@example.com"))
-            .isInstanceOf(org.springframework.security.core.userdetails.UsernameNotFoundException.class)
-            .hasMessageContaining("User not found with username");
+        org.assertj.core.api.Assertions
+                .assertThatThrownBy(() -> userRepository.loadUserByUsername("notfound@example.com"))
+                .isInstanceOf(org.springframework.security.core.userdetails.UsernameNotFoundException.class)
+                .hasMessageContaining("User not found with username");
     }
 
     @TestConfiguration
     @EnableAspectJAutoProxy
-    @Import({UserRepository.class, RoleRepository.class, AuditTrailAspect.class})
-    static class TestRepoConfiguration {}
+    @Import({ UserRepository.class, RoleRepository.class, AuditTrailAspect.class })
+    static class TestRepoConfiguration {
+    }
 
     @Autowired
     private UserRepository userRepository;
@@ -113,9 +117,9 @@ class UserRepositoryTest {
         user1.setRole(savedRole);
         userRepository.save(user1);
 
-    User user2 = new User("alice@example.com", "alicepass");
-    user2.setRole(savedRole);
-    userRepository.save(user2);
+        User user2 = new User("alice@example.com", "alicepass");
+        user2.setRole(savedRole);
+        userRepository.save(user2);
 
         User user3 = new User("Bob", "bob@example.com");
         user3.setRole(savedRole);
@@ -137,21 +141,21 @@ class UserRepositoryTest {
         Pageable pageable = PageRequest.of(0, 3, Sort.by("username").ascending());
         Page<User> result = userRepository.findAll(pageable, Map.of());
 
-    assertThat(result.getContent()).hasSize(3);
-    var usernames = result.getContent().stream().map(User::getUsername).toList();
-    var expected = java.util.List.of("alice@example.com", "Bob", "Charlie");
-    assertThat(usernames.stream().sorted().toList()).isEqualTo(expected.stream().sorted().toList());
+        assertThat(result.getContent()).hasSize(3);
+        var usernames = result.getContent().stream().map(User::getUsername).toList();
+        var expected = java.util.List.of("alice@example.com", "Bob", "Charlie");
+        assertThat(usernames.stream().sorted().toList()).isEqualTo(expected.stream().sorted().toList());
     }
 
     @Test
     void findAll_withFilter_shouldReturnFilteredPage() {
         Pageable pageable = PageRequest.of(0, 5);
-    Map<String, Object> filter = Map.of("username", "alice@example.com");
+        Map<String, Object> filter = Map.of("username", "alice@example.com");
         Page<User> result = userRepository.findAll(pageable, filter);
 
-    assertThat(result.getTotalElements()).isEqualTo(1);
-    assertThat(result.getContent()).hasSize(1);
-    assertThat(result.getContent().get(0).getUsername()).isEqualTo("alice@example.com");
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getUsername()).isEqualTo("alice@example.com");
     }
 
     @Test
@@ -181,9 +185,9 @@ class UserRepositoryTest {
         // Data sudah di-save oleh setUp
         Optional<User> foundUser = userRepository.findById(2L); // Cari Alice
         assertThat(foundUser).isPresent();
-    assertThat(foundUser.get().getUsername()).isEqualTo("alice@example.com");
+        assertThat(foundUser.get().getUsername()).isEqualTo("alice@example.com");
     }
-        
+
     @Test
     void update_shouldModifyExistingUser() {
         User userToUpdate = userRepository.findById(3L).get(); // Ambil Bob

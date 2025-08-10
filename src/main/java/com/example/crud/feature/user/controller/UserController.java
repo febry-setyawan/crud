@@ -15,7 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,8 +41,8 @@ public class UserController {
 
     @Operation(summary = "Membuat user baru", description = "Membuat satu data user baru dan menyimpannya ke database.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "User berhasil dibuat"),
-        @ApiResponse(responseCode = "400", description = "Input tidak valid")
+            @ApiResponse(responseCode = "201", description = "User berhasil dibuat"),
+            @ApiResponse(responseCode = "400", description = "Input tidak valid")
     })
     @PostMapping
     public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto userDto) {
@@ -59,8 +58,7 @@ public class UserController {
             Pageable pageable,
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String password,
-            @RequestParam(required = false) Long roleId
-    ) {
+            @RequestParam(required = false) Long roleId) {
         UserFilterDto filter = new UserFilterDto();
         filter.setUsername(username);
         filter.setPassword(password);
@@ -76,8 +74,8 @@ public class UserController {
 
     @Operation(summary = "Menampilkan user berdasarkan ID", description = "Mengambil satu data user berdasarkan ID uniknya.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "User ditemukan"),
-        @ApiResponse(responseCode = "404", description = "User dengan ID tersebut tidak ditemukan")
+            @ApiResponse(responseCode = "200", description = "User ditemukan"),
+            @ApiResponse(responseCode = "404", description = "User dengan ID tersebut tidak ditemukan")
     })
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
@@ -86,18 +84,19 @@ public class UserController {
 
     @Operation(summary = "Mengupdate user", description = "Memperbarui data user yang sudah ada berdasarkan ID.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "User berhasil diperbarui"),
-        @ApiResponse(responseCode = "404", description = "User dengan ID tersebut tidak ditemukan")
+            @ApiResponse(responseCode = "200", description = "User berhasil diperbarui"),
+            @ApiResponse(responseCode = "404", description = "User dengan ID tersebut tidak ditemukan")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponseDto> updateUser(@PathVariable Long id, @Valid @RequestBody UserRequestDto userDto) {
+    public ResponseEntity<UserResponseDto> updateUser(@PathVariable Long id,
+            @Valid @RequestBody UserRequestDto userDto) {
         return ResponseEntity.ok(userService.updateUser(id, userDto));
     }
 
     @Operation(summary = "Menghapus user", description = "Menghapus satu data user berdasarkan ID.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "User berhasil dihapus"),
-        @ApiResponse(responseCode = "404", description = "User dengan ID tersebut tidak ditemukan")
+            @ApiResponse(responseCode = "204", description = "User berhasil dihapus"),
+            @ApiResponse(responseCode = "404", description = "User dengan ID tersebut tidak ditemukan")
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {

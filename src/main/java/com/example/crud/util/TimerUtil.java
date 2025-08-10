@@ -15,8 +15,9 @@ public class TimerUtil {
 
     /**
      * Mengukur waktu eksekusi sebuah Supplier (aksi yang mengembalikan nilai).
+     * 
      * @param actionName Nama aksi untuk logging.
-     * @param supplier Fungsi yang akan dieksekusi.
+     * @param supplier   Fungsi yang akan dieksekusi.
      * @return Hasil dari eksekusi supplier.
      */
     public static <T> T time(String actionName, Supplier<T> supplier) {

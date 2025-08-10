@@ -65,7 +65,8 @@ class DefaultRoleServiceTest {
         roleService.getAllRoles(PageRequest.of(0, 1), filterDto);
 
         // Assert
-        // Verifikasi bahwa service membangun Map dengan benar sebelum memanggil repository
+        // Verifikasi bahwa service membangun Map dengan benar sebelum memanggil
+        // repository
         verify(roleRepository).findAll(any(), mapCaptor.capture());
         Map<String, Object> capturedMap = mapCaptor.getValue();
 
@@ -143,7 +144,7 @@ class DefaultRoleServiceTest {
 
         // Act
         RoleResponseDto result = roleService.updateRole(1L, updateRequestDto);
-        
+
         // Assert
         assertThat(result.name()).isEqualTo("Updated Name");
 

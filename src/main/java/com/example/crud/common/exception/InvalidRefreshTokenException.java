@@ -1,4 +1,4 @@
-package com.example.crud.feature.auth.service;
+package com.example.crud.common.exception;
 
 public class InvalidRefreshTokenException extends RuntimeException {
     public InvalidRefreshTokenException(String message) {

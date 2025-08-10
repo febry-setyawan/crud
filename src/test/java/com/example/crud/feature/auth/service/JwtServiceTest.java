@@ -6,6 +6,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.*;
 
 class JwtServiceTest {
@@ -34,6 +35,7 @@ class JwtServiceTest {
         assertThat(token).isNotBlank();
         assertThat(extracted).isEqualTo(username);
     }
+
     @Test
     void generateRefreshToken_shouldNotThrow_whenCacheIsNull() {
         CacheManager nullCacheManager = mock(CacheManager.class);
@@ -59,8 +61,9 @@ class JwtServiceTest {
         JwtService service = new JwtService(nullCacheManager);
         service.removeRefreshToken("token");
         // No exception means success
-        assertThat(true).isTrue();
+        assertThatCode(() -> service.removeRefreshToken("token")).doesNotThrowAnyException();
     }
+
     private JwtService jwtService;
     private CacheManager cacheManager;
     private Cache cache;

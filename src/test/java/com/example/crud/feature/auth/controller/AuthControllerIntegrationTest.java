@@ -28,9 +28,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
-
 class AuthControllerIntegrationTest {
         private static final Logger logger = LoggerFactory.getLogger(AuthControllerIntegrationTest.class);
+
         @Autowired
         private MockMvc mockMvc;
         @Autowired
@@ -92,8 +92,9 @@ class AuthControllerIntegrationTest {
                 String newAccessToken = objectMapper.readTree(refreshJson).get("accessToken").asText();
                 String newRefreshToken = objectMapper.readTree(refreshJson).get("refreshToken").asText();
                 assertThat(newAccessToken).isNotBlank();
-                assertThat(newRefreshToken).isNotBlank();
-                assertThat(newRefreshToken).isNotEqualTo(refreshToken); // Rotation
+                assertThat(newRefreshToken)
+                        .isNotBlank()
+                        .isNotEqualTo(refreshToken); // Rotation
 
                 // 3. Logout
                 RefreshRequest logoutRequest = new RefreshRequest();

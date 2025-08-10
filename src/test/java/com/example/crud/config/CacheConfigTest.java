@@ -19,6 +19,7 @@ class CacheConfigTest {
     @Autowired
     private RoleService roleService;
 
+    @SuppressWarnings("removal")
     @MockBean
     private RoleRepository roleRepository;
 
@@ -37,10 +38,10 @@ class CacheConfigTest {
 
         // When
         // First call - should hit the database
-    roleService.getRoleById(roleId);
+        roleService.getRoleById(roleId);
 
         // Second call - should hit the cache
-    roleService.getRoleById(roleId);
+        roleService.getRoleById(roleId);
 
         // Then
         // Verify that the repository method was only called once

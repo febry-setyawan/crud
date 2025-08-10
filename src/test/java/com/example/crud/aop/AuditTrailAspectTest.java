@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
-public class AuditTrailAspectTest {
+class AuditTrailAspectTest {
 
     @Autowired
     private AuditableTestEntityRepository auditableTestEntityRepository;

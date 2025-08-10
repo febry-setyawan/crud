@@ -49,7 +49,8 @@ class AuthenticationServiceTest {
     @Test
     void login_shouldReturnTokens_whenCredentialsAreValid() {
         Authentication authentication = mock(Authentication.class);
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(authentication);
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(authentication);
         when(jwtService.generateToken("user")).thenReturn("accessToken");
         when(jwtService.generateRefreshToken("user")).thenReturn("refreshToken");
 

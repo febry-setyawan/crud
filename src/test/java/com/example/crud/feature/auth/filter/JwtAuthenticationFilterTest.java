@@ -1,5 +1,6 @@
 
 package com.example.crud.feature.auth.filter;
+
 import org.junit.jupiter.api.AfterEach;
 
 import com.example.crud.feature.auth.service.JwtService;
@@ -34,7 +35,8 @@ class JwtAuthenticationFilterTest {
         String username = "user";
         UserDetails userDetails = new User(username, "password", new ArrayList<>());
         // Set an existing authentication in the context
-        UsernamePasswordAuthenticationToken existingAuth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        UsernamePasswordAuthenticationToken existingAuth = new UsernamePasswordAuthenticationToken(userDetails, null,
+                userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(existingAuth);
         when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
         when(jwtService.getUsernameFromToken(token)).thenReturn(username);
@@ -46,8 +48,10 @@ class JwtAuthenticationFilterTest {
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isSameAs(existingAuth);
         verify(filterChain).doFilter(request, response);
     }
+
     @Test
-    void doFilterInternal_shouldNotAuthenticate_whenAuthHeaderDoesNotStartWithBearer() throws ServletException, IOException {
+    void doFilterInternal_shouldNotAuthenticate_whenAuthHeaderDoesNotStartWithBearer()
+            throws ServletException, IOException {
         // Ensure clean context
         SecurityContextHolder.clearContext();
         // Given
@@ -60,6 +64,7 @@ class JwtAuthenticationFilterTest {
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
         verify(filterChain).doFilter(request, response);
     }
+
     @Test
     void doFilterInternal_shouldNotAuthenticate_whenUserDetailsIsNull() throws ServletException, IOException {
         // Given
@@ -107,9 +112,9 @@ class JwtAuthenticationFilterTest {
         String username = "user";
         UserDetails userDetails = new User(username, "password", new ArrayList<>());
 
-    when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-    when(jwtService.getUsernameFromToken(token)).thenReturn(username);
-    when(userDetailsService.loadUserByUsername(username)).thenReturn(userDetails);
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+        when(jwtService.getUsernameFromToken(token)).thenReturn(username);
+        when(userDetailsService.loadUserByUsername(username)).thenReturn(userDetails);
 
         // When
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -151,19 +156,19 @@ class JwtAuthenticationFilterTest {
     @Test
     void doFilterInternal_shouldNotAuthenticate_whenUserIsNotFound() throws ServletException, IOException {
 
-    // Given
-    String token = "validToken";
-    String username = "unknownUser";
-    when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-    when(jwtService.getUsernameFromToken(token)).thenReturn(username);
+        // Given
+        String token = "validToken";
+        String username = "unknownUser";
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+        when(jwtService.getUsernameFromToken(token)).thenReturn(username);
 
         // When
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
-    // Then
-    // Authentication harus null atau principal-nya null jika user tidak ditemukan
-    var authentication = SecurityContextHolder.getContext().getAuthentication();
-    assertThat(authentication == null || authentication.getPrincipal() == null).isTrue();
-    verify(filterChain).doFilter(request, response);
+        // Then
+        // Authentication harus null atau principal-nya null jika user tidak ditemukan
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        assertThat(authentication == null || authentication.getPrincipal() == null).isTrue();
+        verify(filterChain).doFilter(request, response);
     }
 }

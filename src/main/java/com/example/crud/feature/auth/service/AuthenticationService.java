@@ -1,15 +1,13 @@
 
 package com.example.crud.feature.auth.service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.example.crud.common.exception.InvalidRefreshTokenException;
 import com.example.crud.feature.auth.dto.AuthRequest;
 import com.example.crud.feature.auth.dto.RefreshResponse;
 
@@ -25,21 +23,15 @@ public class AuthenticationService {
     }
 
     public RefreshResponse login(AuthRequest authRequest) {
-    try {
         Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(
-                authRequest.getUsername(),
-                authRequest.getPassword()
-            )
-        );
+                new UsernamePasswordAuthenticationToken(
+                        authRequest.getUsername(),
+                        authRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String accessToken = jwtService.generateToken(authRequest.getUsername());
         String refreshToken = jwtService.generateRefreshToken(authRequest.getUsername());
         return new RefreshResponse(accessToken, refreshToken);
-    } catch (Exception e) {
-        throw e;
     }
-    }   
 
     public RefreshResponse refresh(String refreshToken) {
         String username = jwtService.getCacheManager().getCache("refreshTokens").get(refreshToken, String.class);

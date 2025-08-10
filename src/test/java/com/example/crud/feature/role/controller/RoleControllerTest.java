@@ -32,7 +32,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -42,11 +41,9 @@ class RoleControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-
     @SuppressWarnings("removal")
     @MockBean
     private RoleService roleService;
-
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -75,16 +72,17 @@ class RoleControllerTest {
 
         // Sad Path Scenarios
         when(roleService.getRoleById(99L)).thenThrow(new ResourceNotFoundException("Role not found with id: 99"));
-        when(roleService.updateRole(eq(99L), any(RoleRequestDto.class))).thenThrow(new ResourceNotFoundException("Role not found with id: 99"));
+        when(roleService.updateRole(eq(99L), any(RoleRequestDto.class)))
+                .thenThrow(new ResourceNotFoundException("Role not found with id: 99"));
         when(roleService.deleteRole(99L)).thenReturn(false);
     }
 
     @Test
     void createRole_shouldReturnCreatedRole() throws Exception {
         mockMvc.perform(post("/api/roles")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(roleRequestDto)))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(roleRequestDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", is(1)))
                 .andExpect(jsonPath("$.name", is("ADMIN")));
@@ -115,9 +113,10 @@ class RoleControllerTest {
     @Test
     void updateRole_whenRoleExists_shouldReturnUpdatedRole() throws Exception {
         mockMvc.perform(put("/api/roles/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new RoleRequestDto("SUPER_ADMIN", "Super Administrator role"))))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                        objectMapper.writeValueAsString(new RoleRequestDto("SUPER_ADMIN", "Super Administrator role"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is("SUPER_ADMIN")));
     }
@@ -125,9 +124,9 @@ class RoleControllerTest {
     @Test
     void updateRole_whenRoleDoesNotExist_shouldReturnNotFound() throws Exception {
         mockMvc.perform(put("/api/roles/99")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(roleRequestDto)))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(roleRequestDto)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message", is("Role not found with id: 99")));
     }

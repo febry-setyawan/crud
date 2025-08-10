@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.cache.annotation.CacheEvict;
@@ -38,7 +37,7 @@ public class DefaultUserService implements UserService {
     public UserResponseDto createUser(UserRequestDto userDto) {
         Role role = roleRepository.findById(userDto.roleId())
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + userDto.roleId()));
-                
+
         User user = userMapper.toEntity(userDto);
         user.setRole(role);
 
@@ -52,7 +51,7 @@ public class DefaultUserService implements UserService {
                 .map(userMapper::toDto)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
     }
-    
+
     public Page<UserResponseDto> getAllUsers(Pageable pageable, UserFilterDto filter) {
         // Bangun map filter secara internal dari DTO
         Map<String, Object> filters = new HashMap<>();
@@ -74,7 +73,7 @@ public class DefaultUserService implements UserService {
     @CacheEvict(value = "users", key = "#id")
     public UserResponseDto updateUser(Long id, UserRequestDto userDto) {
         User existingUser = userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
         // Validasi Role baru jika ada perubahan
         Role role = roleRepository.findById(userDto.roleId())
@@ -83,7 +82,7 @@ public class DefaultUserService implements UserService {
         existingUser.setUsername(userDto.username());
         existingUser.setPassword(userDto.password());
         existingUser.setRole(role); // Update Role
-        
+
         userRepository.update(existingUser);
         return userMapper.toDto(existingUser);
     }

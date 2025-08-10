@@ -1,6 +1,5 @@
 package com.example.crud.aop;
 
-
 import com.example.crud.common.repository.AbstractJdbcRepository;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -12,7 +11,8 @@ import java.util.Set;
 import java.util.Collections;
 
 @Repository
-public class AuditableTestEntityRepositoryImpl extends AbstractJdbcRepository<AuditableTestEntity, Long> implements AuditableTestEntityRepository {
+public class AuditableTestEntityRepositoryImpl extends AbstractJdbcRepository<AuditableTestEntity, Long>
+        implements AuditableTestEntityRepository {
 
     public AuditableTestEntityRepositoryImpl(DataSource dataSource, JdbcClient jdbcClient) {
         super(dataSource, jdbcClient);
@@ -32,12 +32,13 @@ public class AuditableTestEntityRepositoryImpl extends AbstractJdbcRepository<Au
     protected RowMapper<AuditableTestEntity> getRowMapper() {
         return (rs, rowNum) -> {
             AuditableTestEntity entity = new AuditableTestEntity(
-                rs.getLong("id"),
-                rs.getString("name")
-            );
-            entity.setCreatedAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null);
+                    rs.getLong("id"),
+                    rs.getString("name"));
+            entity.setCreatedAt(
+                    rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null);
             entity.setCreatedBy(rs.getString("created_by"));
-            entity.setUpdatedAt(rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null);
+            entity.setUpdatedAt(
+                    rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null);
             entity.setUpdatedBy(rs.getString("updated_by"));
             return entity;
         };
