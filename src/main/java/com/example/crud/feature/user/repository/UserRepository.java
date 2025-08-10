@@ -29,7 +29,8 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
     
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
-    private static final Set<String> ALLOWED_FILTER_COLUMNS = Set.of(USERNAME, "role_id", PASSWORD);
+    private static final String ROLE_ID = "role_id";
+    private static final Set<String> ALLOWED_FILTER_COLUMNS = Set.of(USERNAME, ROLE_ID, PASSWORD);
 
     static final RowMapper<User> USER_ROW_MAPPER = (rs, rowNum) -> {
         User user = new User();
@@ -44,9 +45,9 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
         user.setUpdatedBy(rs.getString("updated_by"));
 
         // Jika ada role yang ter-join, buat objek Role
-        if (rs.getObject("role_id") != null) {
+        if (rs.getObject(ROLE_ID) != null) {
             Role role = new Role();
-            role.setId(rs.getLong("role_id"));
+            role.setId(rs.getLong(ROLE_ID));
             role.setName(rs.getString("role_name"));
             role.setDescription(rs.getString("role_description"));
             user.setRole(role);
@@ -80,7 +81,7 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
         params.put(USERNAME, user.getUsername());
         params.put(PASSWORD, user.getPassword());
         if (user.getRole() != null) {
-            params.put("role_id", user.getRole().getId());
+            params.put(ROLE_ID, user.getRole().getId());
         }
         // Menambahkan parameter audit
         params.put("created_at", user.getCreatedAt());
@@ -152,9 +153,9 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
                     actualFilters.put(USERNAME, v);
                 } else if (k.equals("role")) {
                     if (v instanceof com.example.crud.feature.role.model.Role roleObj && roleObj.getId() != null) {
-                        actualFilters.put("role_id", roleObj.getId());
+                        actualFilters.put(ROLE_ID, roleObj.getId());
                     } else if (v instanceof Number) {
-                        actualFilters.put("role_id", v);
+                        actualFilters.put(ROLE_ID, v);
                     }
                 } else if (ALLOWED_FILTER_COLUMNS.contains(k)) {
                     actualFilters.put(k, v);
@@ -204,6 +205,10 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
         User user = this.findAll(PageRequest.of(0, 1), Map.of(USERNAME, username))
                 .getContent().stream().findFirst()
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        return buildUserDetails(user);
+    }
+
+    public static UserDetails buildUserDetails(User user) {
         String roleName = user.getRole() != null ? user.getRole().getName() : "USER";
         GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + roleName);
         return org.springframework.security.core.userdetails.User

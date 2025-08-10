@@ -24,6 +24,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.UserDetails;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import org.springframework.data.domain.PageImpl;
+import java.util.List;
 
 @JdbcTest
 @Import(UserRepositoryTest.TestRepoConfiguration.class)
@@ -299,5 +305,30 @@ class UserRepositoryTest {
         User user = UserRepository.USER_ROW_MAPPER.mapRow(rs, 0);
         assertThat(user).isNotNull();
         assertThat(user.getRole()).isNull();
+    }
+
+    @Test
+    void loadUserByUsername_whenUserHasNoRole_shouldReturnUserDetailsWithDefaultRole_mock() {
+        // Arrange
+        UserRepository repo = mock(UserRepository.class, CALLS_REAL_METHODS);
+        User user = new User("mocknorole", "mockpass");
+        // Tidak set role sama sekali
+        doReturn(new PageImpl<>(List.of(user))).when(repo).findAll(any(), any());
+
+        // Act
+        UserDetails details = repo.loadUserByUsername("mocknorole");
+
+        // Assert
+        assertThat(details.getUsername()).isEqualTo("mocknorole");
+        assertThat(details.getAuthorities()).extracting("authority").containsExactly("ROLE_USER");
+    }
+
+    @Test
+    void buildUserDetails_whenUserHasNoRole_shouldReturnUserDetailsWithDefaultRole() {
+        User user = new User("unitnorole", "unitpass");
+        // Tidak set role sama sekali
+        UserDetails details = UserRepository.buildUserDetails(user);
+        assertThat(details.getUsername()).isEqualTo("unitnorole");
+        assertThat(details.getAuthorities()).extracting("authority").containsExactly("ROLE_USER");
     }
 }
