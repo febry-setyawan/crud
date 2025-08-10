@@ -1,6 +1,7 @@
 # Generic CRUD Framework dengan Spring Boot
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=febry-setyawan_crud&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=febry-setyawan_crud) [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=febry-setyawan_crud&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=febry-setyawan_crud) [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=febry-setyawan_crud&metric=bugs)](https://sonarcloud.io/summary/new_code?id=febry-setyawan_crud) [![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=febry-setyawan_crud&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=febry-setyawan_crud) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=febry-setyawan_crud&metric=coverage)](https://sonarcloud.io/summary/new_code?id=febry-setyawan_crud)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=febry-setyawan_crud&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=febry-setyawan_crud) [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=febry-setyawan_crud&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=febry-setyawan_crud) [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=febry-setyawan_crud&metric=bugs)](https://sonarcloud.io/summary/new_code?id=febry-setyawan_crud) [![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=febry-setyawan_crud&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=febry-setyawan_crud) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=febry-setyawan_crud&metric=coverage)](https://sonarcloud.io/summary/new_code?id=febry-setyawan_crud) 
+[![Build Status](https://github.com/febry-setyawan/crud/actions/workflows/build-and-analyze.yml/badge.svg)](https://github.com/febry-setyawan/crud/actions)
 
 Framework ini adalah sebuah proyek demonstrasi untuk membangun sistem CRUD (Create, Read, Update, Delete) yang generik dan dapat digunakan kembali (*reusable*) menggunakan Spring Boot. Proyek ini dibangun tanpa JPA/Hibernate, dan sebagai gantinya menggunakan `JdbcClient` untuk interaksi dengan database.
 
@@ -120,6 +121,37 @@ Proyek ini dikonfigurasi untuk mengirim laporan analisis ke SonarCloud.
     mvn clean verify sonar:sonar -Dsonar.token=TOKEN_SONARCLOUD_ANDA
     ```
 3.  Lihat hasilnya di dashboard SonarCloud Anda.
+
+---
+
+## Cara Menjalankan Performance Test (k6)
+
+Proyek ini sudah menyertakan script k6 (`script.js`) untuk performance/load testing endpoint API.
+
+### Menjalankan k6 secara lokal:
+1. Install k6: https://k6.io/docs/getting-started/installation/
+2. Jalankan aplikasi (pastikan endpoint API bisa diakses)
+3. Jalankan perintah berikut:
+    ```bash
+    k6 run script.js
+    ```
+
+### Menjalankan k6 ke k6 Cloud:
+    ```bash
+    k6 cloud script.js
+    ```
+
+Hasil test akan muncul di terminal atau dashboard k6 cloud.
+
+---
+
+## Workflow Pengembangan (Branching & CI/CD)
+
+- Branch utama: `main` (selalu stabil, siap rilis)
+- Branch pengembangan: `development` (integrasi fitur sebelum merge ke main)
+- Setiap fitur/bugfix dibuat di branch `feature/xxx` atau `bugfix/xxx` lalu merge ke `development`
+- CI/CD otomatis build, test, dan analisis kualitas kode setiap push/PR
+- Rilis ke production dilakukan dari branch `main`
 
 ---
 
