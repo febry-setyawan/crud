@@ -6,14 +6,12 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-// ...existing code...
 
 import static org.hamcrest.Matchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AuthControllerE2ETest {
-        // No Testcontainers, use local DB config (H2/Postgres) from application-test.properties
-
+            
     @LocalServerPort
     int port;
 
