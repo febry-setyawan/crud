@@ -2,7 +2,10 @@
 package com.example.crud.aop;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.jupiter.api.DisplayName;
-import org.mockito.Mockito;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import com.example.crud.common.model.Auditable;
 import org.springframework.security.core.Authentication;
 
 import org.junit.jupiter.api.AfterEach;
@@ -15,13 +18,16 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ActiveProfiles("test")
 class AuditTrailAspectTest {
+    
     @Autowired
     private AuditTrailAspect auditTrailAspect;
 
@@ -128,8 +134,8 @@ class AuditTrailAspectTest {
     @Test
     @DisplayName("getCurrentUsername returns SYSTEM if isAuthenticated is false")
     void getCurrentUsername_shouldReturnSystem_whenNotAuthenticated() throws Exception {
-        Authentication auth = Mockito.mock(Authentication.class);
-        Mockito.when(auth.isAuthenticated()).thenReturn(false);
+        Authentication auth = mock(Authentication.class);
+        when(auth.isAuthenticated()).thenReturn(false);
         SecurityContextHolder.getContext().setAuthentication(auth);
         String username = auditTrailAspect.getClass().getDeclaredMethod("getCurrentUsername").trySetAccessible() ?
             (String) auditTrailAspect.getClass().getDeclaredMethod("getCurrentUsername").invoke(auditTrailAspect) : null;
@@ -139,9 +145,9 @@ class AuditTrailAspectTest {
     @Test
     @DisplayName("getCurrentUsername returns SYSTEM if getName is anonymousUser")
     void getCurrentUsername_shouldReturnSystem_whenAnonymousUser() throws Exception {
-        Authentication auth = Mockito.mock(Authentication.class);
-        Mockito.when(auth.isAuthenticated()).thenReturn(true);
-        Mockito.when(auth.getName()).thenReturn("anonymousUser");
+        Authentication auth = mock(Authentication.class);
+        when(auth.isAuthenticated()).thenReturn(true);
+        when(auth.getName()).thenReturn("anonymousUser");
         SecurityContextHolder.getContext().setAuthentication(auth);
         String username = auditTrailAspect.getClass().getDeclaredMethod("getCurrentUsername").trySetAccessible() ?
             (String) auditTrailAspect.getClass().getDeclaredMethod("getCurrentUsername").invoke(auditTrailAspect) : null;
@@ -151,14 +157,27 @@ class AuditTrailAspectTest {
     @Test
     @DisplayName("aroundUpdate should propagate exception from pjp.proceed()")
     void aroundUpdate_shouldPropagateException() throws Throwable {
-        ProceedingJoinPoint pjp = Mockito.mock(ProceedingJoinPoint.class);
-        Object entity = Mockito.mock(com.example.crud.common.model.Auditable.class);
-        Mockito.when(pjp.proceed()).thenThrow(new RuntimeException("proceed error"));
-        java.lang.reflect.Method method = auditTrailAspect.getClass().getDeclaredMethod("aroundUpdate", ProceedingJoinPoint.class, Object.class);
-        Exception thrown = org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> {
+        ProceedingJoinPoint pjp = mock(ProceedingJoinPoint.class);
+        Object entity = mock(Auditable.class);
+        when(pjp.proceed()).thenThrow(new RuntimeException("proceed error"));
+        Method method = auditTrailAspect.getClass().getDeclaredMethod("aroundUpdate", ProceedingJoinPoint.class, Object.class);
+        Exception thrown = assertThrows(Exception.class, () -> {
             method.invoke(auditTrailAspect, pjp, entity);
         });
         assertThat(thrown.getCause()).isInstanceOf(RuntimeException.class);
         assertThat(thrown.getCause().getMessage()).isEqualTo("proceed error");
+    }
+
+    @Test
+    @DisplayName("aroundUpdate should proceed without audit when entity is not Auditable")
+    void aroundUpdate_shouldProceedWithoutAudit_whenEntityNotAuditable() throws Throwable {
+        ProceedingJoinPoint pjp = mock(ProceedingJoinPoint.class);
+        Object entity = new Object(); // Not Auditable
+        Object expected = new Object();
+        when(pjp.proceed()).thenReturn(expected);
+        Method method = auditTrailAspect.getClass().getDeclaredMethod("aroundUpdate", ProceedingJoinPoint.class, Object.class);
+        Object result = method.invoke(auditTrailAspect, pjp, entity);
+        assertThat(result).isSameAs(expected);
+        verify(pjp).proceed();
     }
 }
