@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DefaultRoleServiceTest {
-
     @Mock
     private RoleRepository roleRepository;
 
@@ -188,5 +187,65 @@ class DefaultRoleServiceTest {
 
         // Assert
         assertThat(result).isFalse();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void getAllRoles_withBlankDescriptionFilter_shouldNotAddDescriptionToMap() {
+        // Arrange
+        RoleFilterDto filterDto = new RoleFilterDto();
+        filterDto.setDescription("   "); // Blank string
+
+        Page<Role> rolePage = new PageImpl<>(List.of(role));
+        when(roleRepository.findAll(any(), any(Map.class))).thenReturn(rolePage);
+        when(roleMapper.toDto(any(Role.class))).thenReturn(responseDto);
+
+        // Act
+        roleService.getAllRoles(PageRequest.of(0, 1), filterDto);
+
+        // Assert
+        verify(roleRepository).findAll(any(), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+        assertThat(capturedMap).isEmpty();
+    }
+    @SuppressWarnings("unchecked")
+    @Test
+    void getAllRoles_withBlankNameFilter_shouldNotAddNameToMap() {
+        // Arrange
+        RoleFilterDto filterDto = new RoleFilterDto();
+        filterDto.setName("   "); // Blank string
+
+        Page<Role> rolePage = new PageImpl<>(List.of(role));
+        when(roleRepository.findAll(any(), any(Map.class))).thenReturn(rolePage);
+        when(roleMapper.toDto(any(Role.class))).thenReturn(responseDto);
+
+        // Act
+        roleService.getAllRoles(PageRequest.of(0, 1), filterDto);
+
+        // Assert
+        verify(roleRepository).findAll(any(), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+        assertThat(capturedMap).isEmpty();
+    }
+    @SuppressWarnings("unchecked")
+    @Test
+    void getAllRoles_withDescriptionFilter_shouldBuildMapWithDescriptionWildcard() {
+        // Arrange
+        RoleFilterDto filterDto = new RoleFilterDto();
+        filterDto.setDescription("desc"); // Filter dengan 'desc'
+
+        Page<Role> rolePage = new PageImpl<>(List.of(role));
+        when(roleRepository.findAll(any(), any(Map.class))).thenReturn(rolePage);
+        when(roleMapper.toDto(any(Role.class))).thenReturn(responseDto);
+
+        // Act
+        roleService.getAllRoles(PageRequest.of(0, 1), filterDto);
+
+        // Assert
+        verify(roleRepository).findAll(any(), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+        assertThat(capturedMap)
+            .hasSize(1)
+            .containsEntry("description", "%desc%");
     }
 }

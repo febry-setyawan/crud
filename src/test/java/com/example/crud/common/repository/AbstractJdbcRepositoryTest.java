@@ -130,6 +130,41 @@ class AbstractJdbcRepositoryTest {
         assertThat(page.getTotalElements()).isZero();
     }
 
+    @Test
+    void buildWhereClause_shouldUseEqualsForStringWithoutPercent() {
+        Map<String, Object> filters = new LinkedHashMap<>();
+        filters.put("name", "admin"); // String tanpa %
+        String where = repository.buildWhereClause(filters);
+        assertThat(where).contains("name = :name");
+    }
+
+    @Test
+    void buildSortClause_shouldReturnEmptyForAllNonWhitelisted() {
+        Sort sort = Sort.by(Sort.Order.asc("notAllowed"));
+        String clause = repository.buildSortClause(sort);
+        assertThat(clause).isEmpty();
+    }
+
+    @Test
+    void buildSortClause_shouldFilterOutNonWhitelistedColumns() {
+        Sort sort = Sort.by(Sort.Order.asc("name"), Sort.Order.desc("notAllowed"));
+        String clause = repository.buildSortClause(sort);
+        assertThat(clause).contains("name ASC").doesNotContain("notAllowed DESC");
+    }
+
+    @Test
+    void buildSortClause_shouldCoverMixedWhitelistedAndNonWhitelistedColumns() {
+        // Kolom pertama whitelisted, kedua tidak
+        Sort sort = Sort.by(Sort.Order.asc("name"), Sort.Order.desc("notAllowed"));
+        String clause = repository.buildSortClause(sort);
+        assertThat(clause).isEqualTo("name ASC");
+
+        // Kolom pertama tidak whitelisted, kedua whitelisted
+        sort = Sort.by(Sort.Order.asc("notAllowed"), Sort.Order.desc("name"));
+        clause = repository.buildSortClause(sort);
+        assertThat(clause).isEqualTo("name DESC");
+    }
+
     // Dummy entity and repository for testing
     static class DummyEntity extends com.example.crud.common.model.BaseEntity<Long> {
         private String name;
