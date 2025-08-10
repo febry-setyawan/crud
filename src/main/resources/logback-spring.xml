@@ -13,6 +13,6 @@
 
     <logger name="com.example.crud" level="DEBUG"/>
     <logger name="org.springframework.jdbc.core" level="DEBUG"/>
-    <logger name="org.springframework.security" level="DEBUG"/>
+    <logger name="org.springframework.security" level="INFO"/>
 
 </configuration>
