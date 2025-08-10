@@ -2,6 +2,7 @@ package com.example.crud.feature.role.repository;
 
 import com.example.crud.common.repository.AbstractJdbcRepository;
 import com.example.crud.feature.role.model.Role;
+import static com.example.crud.feature.role.RoleConstants.*;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
@@ -15,11 +16,10 @@ import java.util.Set;
 
 public class RoleRepository extends AbstractJdbcRepository<Role, Long> {
 
-    private static final String DESCRIPTION = "description";
     private static final RowMapper<Role> ROLE_ROW_MAPPER = (rs, rowNum) -> {
         Role role = new Role();
-        role.setId(rs.getLong("id"));
-        role.setName(rs.getString("name"));
+        role.setId(rs.getLong(ID));
+        role.setName(rs.getString(NAME));
         role.setDescription(rs.getString(DESCRIPTION));
         return role;
     };
@@ -30,12 +30,12 @@ public class RoleRepository extends AbstractJdbcRepository<Role, Long> {
 
     @Override
     protected String getTableName() {
-        return "roles";
+        return TABLE_NAME;
     }
 
     @Override
     protected String getIdColumnName() {
-        return "id";
+        return ID;
     }
 
     @Override
@@ -46,13 +46,13 @@ public class RoleRepository extends AbstractJdbcRepository<Role, Long> {
     @Override
     protected Map<String, Object> getUpdateParameters(Role role) {
         Map<String, Object> params = new LinkedHashMap<>();
-        params.put("name", role.getName());
+        params.put(NAME, role.getName());
         params.put(DESCRIPTION, role.getDescription());
         return params;
     }
 
     @Override
     protected Set<String> getAllowedSortColumns() {
-        return Set.of("id", "name", DESCRIPTION);
+        return Set.of(ID, NAME, DESCRIPTION);
     }
 }

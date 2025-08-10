@@ -71,8 +71,9 @@ class DefaultRoleServiceTest {
         Map<String, Object> capturedMap = mapCaptor.getValue();
 
         // Pastikan service menambahkan wildcard '%' untuk pencarian LIKE
-        assertThat(capturedMap).hasSize(1);
-        assertThat(capturedMap.get("name")).isEqualTo("%admin%");
+        assertThat(capturedMap)
+            .hasSize(1)
+            .containsEntry("name", "%admin%");
     }
 
     @SuppressWarnings("unchecked")

@@ -61,6 +61,10 @@ public class ResilientUserService implements UserService {
         return new UserResponseDto(id, "fallback@example.com", "******", null);
     }
 
+    /**
+     * Fallback for getAllUsers. The 'filters' parameter is required by Resilience4j fallback signature.
+     */
+    @SuppressWarnings("unused")
     private Page<UserResponseDto> fallbackGetAllUsers(Pageable pageable, UserFilterDto filters, Throwable t) {
         log.error("Circuit breaker opened for getAllUsers", t);
         return new PageImpl<>(Collections.emptyList(), pageable, 0);

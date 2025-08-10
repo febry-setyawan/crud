@@ -4,6 +4,7 @@ import com.example.crud.common.repository.AbstractJdbcRepository;
 import com.example.crud.feature.role.model.Role;
 import com.example.crud.feature.user.model.User;
 import com.example.crud.util.TimerUtil;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -16,6 +17,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Repository;
+
+import static com.example.crud.common.model.AuditTrailConstants.*;
+import static com.example.crud.feature.role.RoleConstants.*;
+import static com.example.crud.feature.user.UserConstants.*;
+import static com.example.crud.feature.user.UserConstants.TABLE_NAME;
+import static com.example.crud.feature.user.UserConstants.ID;
 import javax.sql.DataSource;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -26,32 +33,37 @@ import java.util.Set;
 
 @Repository
 public class UserRepository extends AbstractJdbcRepository<User, Long> implements UserDetailsService {
-    
-    private static final String USERNAME = "username";
-    private static final String PASSWORD = "password";
-    private static final String ROLE_ID = "role_id";
-    private static final String CREATED_AT = "created_at";
-    private static final String UPDATED_AT = "updated_at";
+    private static final String FIND_BY_ID_SQL = ("""
+            SELECT
+                u.id as user_id, u.username as user_username, u.password as user_password,
+                u.created_at as user_created_at, u.created_by as user_created_by,
+                u.updated_at as user_updated_at, u.updated_by as user_updated_by,
+                r.id as role_id, r.name as role_name, r.description as role_description
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.id
+            WHERE u.id = :id
+        """).stripIndent().trim();
+
     private static final Set<String> ALLOWED_FILTER_COLUMNS = Set.of(USERNAME, ROLE_ID, PASSWORD);
 
     static final RowMapper<User> USER_ROW_MAPPER = (rs, rowNum) -> {
         User user = new User();
-        user.setId(rs.getLong("id"));
+        user.setId(rs.getLong(PREFIX_USER + ID));
         // Ambil dari alias query: user_name dan user_password
-        user.setUsername(rs.getString("user_username"));
-        user.setPassword(rs.getString("user_password"));
+        user.setUsername(rs.getString(PREFIX_USER + USERNAME));
+        user.setPassword(rs.getString(PREFIX_USER + PASSWORD));
         // Mapping kolom audit
-    user.setCreatedAt(rs.getTimestamp(CREATED_AT) != null ? rs.getTimestamp(CREATED_AT).toLocalDateTime() : null);
-        user.setCreatedBy(rs.getString("created_by"));
-    user.setUpdatedAt(rs.getTimestamp(UPDATED_AT) != null ? rs.getTimestamp(UPDATED_AT).toLocalDateTime() : null);
-        user.setUpdatedBy(rs.getString("updated_by"));
+        user.setCreatedAt(rs.getTimestamp(PREFIX_USER + CREATED_AT) != null ? rs.getTimestamp(PREFIX_USER + CREATED_AT).toLocalDateTime() : null);
+        user.setCreatedBy(rs.getString(PREFIX_USER + CREATED_BY));
+        user.setUpdatedAt(rs.getTimestamp(PREFIX_USER + UPDATED_AT) != null ? rs.getTimestamp(PREFIX_USER + UPDATED_AT).toLocalDateTime() : null);
+        user.setUpdatedBy(rs.getString(PREFIX_USER + UPDATED_BY));
 
         // Jika ada role yang ter-join, buat objek Role
         if (rs.getObject(ROLE_ID) != null) {
             Role role = new Role();
             role.setId(rs.getLong(ROLE_ID));
-            role.setName(rs.getString("role_name"));
-            role.setDescription(rs.getString("role_description"));
+            role.setName(rs.getString(PREFIX_ROLE + NAME));
+            role.setDescription(rs.getString(PREFIX_ROLE + DESCRIPTION));
             user.setRole(role);
         }
         return user;
@@ -63,12 +75,12 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
 
     @Override
     protected String getTableName() {
-        return "users";
+        return TABLE_NAME;
     }
 
     @Override
     protected String getIdColumnName() {
-        return "id";
+        return ID;
     }
 
     @Override
@@ -87,38 +99,28 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
         }
         // Menambahkan parameter audit
         params.put(CREATED_AT, user.getCreatedAt());
-        params.put("created_by", user.getCreatedBy());
+        params.put(CREATED_BY, user.getCreatedBy());
         params.put(UPDATED_AT, user.getUpdatedAt());
-        params.put("updated_by", user.getUpdatedBy());
+        params.put(UPDATED_BY, user.getUpdatedBy());
         return params;
     }
 
     @Override
     protected Set<String> getAllowedSortColumns() {
         // Daftarkan semua kolom yang boleh digunakan untuk sorting
-        return Set.of("id", USERNAME, PASSWORD);
+        return Set.of(ID, USERNAME, PASSWORD);
     }
 
     @Override
     public Optional<User> findById(Long id) {
-        return TimerUtil.time("findById", () -> {
-            String sql = """
-                        SELECT
-                            u.id as user_id, u.username as user_username, u.password as user_password,
-                            u.created_at as user_created_at, u.created_by as user_created_by,
-                            u.updated_at as user_updated_at, u.updated_by as user_updated_by,
-                            r.id as role_id, r.name as role_name, r.description as role_description
-                        FROM users u
-                        LEFT JOIN roles r ON u.role_id = r.id
-                        WHERE u.id = :id
-                    """.stripIndent().trim();
-            Map<String, Object> params = Map.of("id", id);
-            logQuery(sql, params);
-            return jdbcClient.sql(sql)
-                    .param("id", id)
-                    .query(getRowMapper())
-                    .optional();
-        });
+    return TimerUtil.time("findById", () -> {
+        Map<String, Object> params = Map.of(ID, id);
+        logQuery(FIND_BY_ID_SQL, params);
+        return jdbcClient.sql(FIND_BY_ID_SQL)
+            .param(ID, id)
+            .query(getRowMapper())
+            .optional();
+    });
     }
 
     @Override
