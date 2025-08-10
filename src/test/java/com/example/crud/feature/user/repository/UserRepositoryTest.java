@@ -27,7 +27,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import org.springframework.data.domain.PageImpl;
 import java.util.List;
