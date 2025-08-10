@@ -38,6 +38,70 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @WithMockUser(roles = "ADMIN")
 class UserControllerTest {
+    @Test
+    @WithMockUser(roles = "USER")
+    void getAllUsers_withNonAdminRole_shouldReturnForbidden() throws Exception {
+        // Mock service to return a valid page so validation passes
+        when(userService.getAllUsers(any(Pageable.class), any(UserFilterDto.class)))
+            .thenReturn(new PageImpl<>(List.of()));
+        var result = mockMvc.perform(get("/api/users?roleId=1"))
+            .andReturn();
+        System.out.println("DEBUG Forbidden Test Response: " + result.getResponse().getContentAsString());
+        // Still assert forbidden for test result
+        org.springframework.test.util.AssertionErrors.assertEquals(
+            "Status expected:<403> but was:<" + result.getResponse().getStatus() + ">",
+            403, result.getResponse().getStatus());
+    }
+    @Test
+    void getAllUsers_withInvalidRoleId_shouldReturnBadRequest() throws Exception {
+        // roleId string, harusnya gagal validasi (bad request)
+        mockMvc.perform(get("/api/users?roleId=abc"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getAllUsers_withNullRoleId_shouldReturnAllUsers() throws Exception {
+        // roleId null, harusnya return semua user (default behavior)
+        Page<UserResponseDto> userPage = new PageImpl<>(List.of(userResponseDto));
+        when(userService.getAllUsers(any(Pageable.class), any(UserFilterDto.class))).thenReturn(userPage);
+
+        mockMvc.perform(get("/api/users"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)));
+    }
+    @Test
+    void getAllUsers_withUsernameAndRoleIdFilter_shouldReturnFilteredUsers() throws Exception {
+        // Simulasi kombinasi filter username dan roleId
+        Page<UserResponseDto> userPage = new PageImpl<>(List.of(userResponseDto));
+        when(userService.getAllUsers(any(Pageable.class), any(UserFilterDto.class))).thenReturn(userPage);
+
+        mockMvc.perform(get("/api/users?username=admin@email.com&roleId=1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].username", is("admin@email.com")))
+                .andExpect(jsonPath("$.content[0].role.id", is(1)));
+    }
+    @Test
+    void getAllUsers_withNonExistentRoleId_shouldReturnEmptyList() throws Exception {
+        // Simulasi roleId yang tidak ada (misal, 999)
+        Page<UserResponseDto> emptyPage = new PageImpl<>(List.of());
+        when(userService.getAllUsers(any(Pageable.class), any(UserFilterDto.class))).thenReturn(emptyPage);
+
+        mockMvc.perform(get("/api/users?roleId=999"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(0)));
+    }
+
+
+    @Test
+    void getAllUsers_withRoleIdFilter_shouldReturnFilteredUsers() throws Exception {
+        // Simulasi filter roleId=1
+        mockMvc.perform(get("/api/users?roleId=1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].role.id", is(1)))
+                .andExpect(jsonPath("$.content[0].role.name", is("ADMIN")));
+    }
 
 
     @Autowired

@@ -74,9 +74,10 @@ public class SecurityConfigTest {
     }
 
     @Test
-    @WithMockUser // Simulates an authenticated user
+    @WithMockUser(roles = "ADMIN") // Simulates an authenticated admin user
     void shouldAllowAccessToProtectedEndpoints_whenAuthenticated() throws Exception {
-        mockMvc.perform(get("/api/users")) // Assuming /api/users is a protected endpoint
+        // Always include a valid roleId to avoid validation errors
+        mockMvc.perform(get("/api/users?roleId=1"))
                 .andExpect(status().isOk());
     }
 }

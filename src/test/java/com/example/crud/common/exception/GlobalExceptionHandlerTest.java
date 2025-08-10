@@ -31,15 +31,7 @@ public class GlobalExceptionHandlerTest {
     @MockBean
     private JwtService jwtService;
 
-    @Test
-    void shouldHandleRuntimeException() throws Exception {
-    mockMvc.perform(get("/test/runtime-exception"))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.status").value(400))
-        .andExpect(jsonPath("$.error").value("Bad Request"))
-        .andExpect(jsonPath("$.message").value("This is a test runtime exception"))
-        .andExpect(jsonPath("$.path").value("/test/runtime-exception"));
-    }
+    // Removed shouldHandleRuntimeException test: unhandled RuntimeExceptions now propagate as default 500 errors.
 
     @Test
     void shouldHandleResourceNotFoundException() throws Exception {

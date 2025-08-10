@@ -27,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 @RestController
 @RequestMapping("/api/users")
 @Tag(name = "User Management", description = "Endpoint untuk operasi CRUD pada User")
@@ -50,13 +52,24 @@ public class UserController {
     }
 
     @Operation(summary = "Menampilkan semua user", description = "Mengambil daftar semua user dengan opsi filter, sort, dan pagination.")
-    @PageableAsQueryParam 
+    @PageableAsQueryParam
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<Page<UserResponseDto>> getAllUsers(Pageable pageable, @RequestParam MultiValueMap<String, String> allParams) {
+    public ResponseEntity<Page<UserResponseDto>> getAllUsers(
+            Pageable pageable,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String password,
+            @RequestParam(required = false) Long roleId
+    ) {
         UserFilterDto filter = new UserFilterDto();
-        filter.setUsername(allParams.getFirst("username"));
-        filter.setPassword(allParams.getFirst("password"));
-
+        filter.setUsername(username);
+        filter.setPassword(password);
+        if (roleId != null) {
+            com.example.crud.feature.role.model.Role role = new com.example.crud.feature.role.model.Role();
+            // Ensure the id is set using the BaseEntity setter
+            role.setId(roleId);
+            filter.setRole(role);
+        }
         Page<UserResponseDto> page = userService.getAllUsers(pageable, filter);
         return ResponseEntity.ok(page);
     }

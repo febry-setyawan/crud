@@ -62,6 +62,9 @@ public class DefaultUserService implements UserService {
         if (filter.getPassword() != null && !filter.getPassword().isBlank()) {
             filters.put("password", "%" + filter.getPassword() + "%");
         }
+        if (filter.getRole() != null && filter.getRole().getId() != null) {
+            filters.put("role", filter.getRole());
+        }
 
         Page<User> userPage = userRepository.findAll(pageable, filters);
         return userPage.map(userMapper::toDto);

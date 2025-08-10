@@ -7,24 +7,26 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
-
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponseDto> handleRuntimeException(RuntimeException ex, HttpServletRequest request) {
+    @ExceptionHandler(com.example.crud.feature.auth.service.InvalidRefreshTokenException.class)
+    public ResponseEntity<ErrorResponseDto> handleInvalidRefreshToken(
+            com.example.crud.feature.auth.service.InvalidRefreshTokenException ex, HttpServletRequest request) {
         ErrorResponseDto errorResponse = new ErrorResponseDto(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Bad Request",
+                java.time.LocalDateTime.now(),
+                org.springframework.http.HttpStatus.UNAUTHORIZED.value(),
+                "Unauthorized",
                 ex.getMessage(),
                 request.getRequestURI()
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponse, org.springframework.http.HttpStatus.UNAUTHORIZED);
     }
+
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
@@ -61,6 +63,18 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
 
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponseDto> handleTypeMismatchException(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        ErrorResponseDto errorResponse = new ErrorResponseDto(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                "Invalid parameter: '" + ex.getName() + "' should be of type " + ex.getRequiredType().getSimpleName(),
+                request.getRequestURI()
+        );
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 }

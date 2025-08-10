@@ -123,14 +123,19 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
     @Override
     public Page<User> findAll(Pageable pageable, Map<String, Object> filters) {
         return TimerUtil.time("findAll", () -> {
-            // --- Count Query (No change needed here) ---
             StringBuilder countSql = new StringBuilder("SELECT count(*) FROM %s u".formatted(getTableName()));
             Map<String, Object> actualFilters = new LinkedHashMap<>();
             if (filters != null && !filters.isEmpty()) {
-                // Gunakan key 'username' untuk filter ke kolom tabel, bukan alias
                 filters.forEach((k, v) -> {
                     if (k.equals(USERNAME)) {
                         actualFilters.put(USERNAME, v);
+                    } else if (k.equals("role")) {
+                        // Support filter by role (expecting Role object or role id)
+                        if (v instanceof com.example.crud.feature.role.model.Role roleObj && roleObj.getId() != null) {
+                            actualFilters.put("role_id", roleObj.getId());
+                        } else if (v instanceof Number) {
+                            actualFilters.put("role_id", v);
+                        }
                     } else {
                         actualFilters.put(k, v);
                     }
@@ -144,7 +149,6 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
                                         .query(Long.class)
                                         .single();
 
-            // Gunakan query dengan JOIN dan alias
             StringBuilder dataSql = new StringBuilder(("""
                 SELECT
                     u.id as user_id, u.username as user_name, u.password as user_password,
