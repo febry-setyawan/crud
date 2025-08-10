@@ -88,6 +88,24 @@ class AbstractJdbcRepositoryTest {
     }
 
     @Test
+    void buildSortClause_withAlias_shouldReturnEmptyForAllNonWhitelisted() {
+        Sort sort = Sort.by(Sort.Order.asc("notAllowed1"), Sort.Order.desc("notAllowed2"));
+        String clause = repository.buildSortClause(sort, "u");
+        assertThat(clause).isEmpty();
+    }
+
+    @Test
+    void getRowMapper_shouldMapResultSetToEntity() throws Exception {
+        java.sql.ResultSet rs = mock(java.sql.ResultSet.class);
+        when(rs.getLong("id")).thenReturn(42L);
+        when(rs.getString("name")).thenReturn("test");
+        RowMapper<DummyEntity> rowMapper = repository.getRowMapper();
+        DummyEntity entity = rowMapper.mapRow(rs, 0);
+        assertThat(entity.getId()).isEqualTo(42L);
+        assertThat(entity.getName()).isEqualTo("test");
+    }
+
+    @Test
     void update_shouldCallJdbcUpdate() {
         DummyEntity entity = new DummyEntity(1L, "admin");
         when(simpleJdbcInsert.executeAndReturnKey(anyMap())).thenReturn(1L);
