@@ -1,4 +1,9 @@
+
 package com.example.crud.aop;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.junit.jupiter.api.DisplayName;
+import org.mockito.Mockito;
+import org.springframework.security.core.Authentication;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 class AuditTrailAspectTest {
+    @Autowired
+    private AuditTrailAspect auditTrailAspect;
 
     @Autowired
     private AuditableTestEntityRepository auditableTestEntityRepository;
@@ -116,5 +123,42 @@ class AuditTrailAspectTest {
         // Then
         assertThat(reloaded.getUpdatedAt()).isAfter(initialUpdatedAt);
         assertThat(reloaded.getUpdatedBy()).isEqualTo("update_user");
+    }
+
+    @Test
+    @DisplayName("getCurrentUsername returns SYSTEM if isAuthenticated is false")
+    void getCurrentUsername_shouldReturnSystem_whenNotAuthenticated() throws Exception {
+        Authentication auth = Mockito.mock(Authentication.class);
+        Mockito.when(auth.isAuthenticated()).thenReturn(false);
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        String username = auditTrailAspect.getClass().getDeclaredMethod("getCurrentUsername").trySetAccessible() ?
+            (String) auditTrailAspect.getClass().getDeclaredMethod("getCurrentUsername").invoke(auditTrailAspect) : null;
+        assertThat(username).isEqualTo("SYSTEM");
+    }
+
+    @Test
+    @DisplayName("getCurrentUsername returns SYSTEM if getName is anonymousUser")
+    void getCurrentUsername_shouldReturnSystem_whenAnonymousUser() throws Exception {
+        Authentication auth = Mockito.mock(Authentication.class);
+        Mockito.when(auth.isAuthenticated()).thenReturn(true);
+        Mockito.when(auth.getName()).thenReturn("anonymousUser");
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        String username = auditTrailAspect.getClass().getDeclaredMethod("getCurrentUsername").trySetAccessible() ?
+            (String) auditTrailAspect.getClass().getDeclaredMethod("getCurrentUsername").invoke(auditTrailAspect) : null;
+        assertThat(username).isEqualTo("SYSTEM");
+    }
+
+    @Test
+    @DisplayName("aroundUpdate should propagate exception from pjp.proceed()")
+    void aroundUpdate_shouldPropagateException() throws Throwable {
+        ProceedingJoinPoint pjp = Mockito.mock(ProceedingJoinPoint.class);
+        Object entity = Mockito.mock(com.example.crud.common.model.Auditable.class);
+        Mockito.when(pjp.proceed()).thenThrow(new RuntimeException("proceed error"));
+        java.lang.reflect.Method method = auditTrailAspect.getClass().getDeclaredMethod("aroundUpdate", ProceedingJoinPoint.class, Object.class);
+        Exception thrown = org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> {
+            method.invoke(auditTrailAspect, pjp, entity);
+        });
+        assertThat(thrown.getCause()).isInstanceOf(RuntimeException.class);
+        assertThat(thrown.getCause().getMessage()).isEqualTo("proceed error");
     }
 }

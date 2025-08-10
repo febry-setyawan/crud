@@ -21,6 +21,9 @@ import org.springframework.test.context.jdbc.Sql;
 import java.util.Map;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @JdbcTest
 @Import(UserRepositoryTest.TestRepoConfiguration.class)
@@ -32,58 +35,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 })
 @WithMockUser("test-user")
 class UserRepositoryTest {
-    @Test
-    void findAll_withInvalidSortColumn_shouldNotThrow() {
-        Pageable pageable = PageRequest.of(0, 3, Sort.by("nonexistent").ascending());
-        // Should not throw, but may ignore the sort or fallback
-        Page<User> result = userRepository.findAll(pageable, Map.of());
-        assertThat(result.getContent()).isNotNull();
-    }
-
-    @Test
-    void findById_whenUserNotFound_shouldReturnEmptyOptional() {
-        Optional<User> result = userRepository.findById(9999L);
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    void save_whenUserIsNull_shouldThrowException() {
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> userRepository.save(null))
-                .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void update_whenUserNotFound_shouldReturnZero() {
-        User notExist = new User("Ghost", "ghost@example.com");
-        notExist.setId(9999L);
-        notExist.setRole(savedRole);
-        int updatedRows = userRepository.update(notExist);
-        assertThat(updatedRows).isZero();
-    }
-
-    @Test
-    void findAll_withNullAndEmptyFilters_shouldReturnAllUsers() {
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<User> resultNull = userRepository.findAll(pageable, null);
-        Page<User> resultEmpty = userRepository.findAll(pageable, Map.of());
-        assertThat(resultNull.getTotalElements()).isEqualTo(resultEmpty.getTotalElements());
-    }
-
-    @Test
-    void loadUserByUsername_whenUserExists_shouldReturnUserDetails() {
-        org.springframework.security.core.userdetails.UserDetails details = userRepository
-                .loadUserByUsername("alice@example.com");
-        assertThat(details.getUsername()).isEqualTo("alice@example.com");
-        assertThat(details.getAuthorities()).extracting("authority").contains("ROLE_USER");
-    }
-
-    @Test
-    void loadUserByUsername_whenUserNotFound_shouldThrowException() {
-        org.assertj.core.api.Assertions
-                .assertThatThrownBy(() -> userRepository.loadUserByUsername("notfound@example.com"))
-                .isInstanceOf(org.springframework.security.core.userdetails.UsernameNotFoundException.class)
-                .hasMessageContaining("User not found with username");
-    }
 
     @TestConfiguration
     @EnableAspectJAutoProxy
@@ -206,5 +157,69 @@ class UserRepositoryTest {
     void count_shouldReturnCorrectNumberOfUsers() {
         long count = userRepository.findAll(PageRequest.of(0, 10), Map.of()).getTotalElements();
         assertThat(count).isEqualTo(3);
+    }
+
+    @Test
+    void findAll_withRoleIdNumber_shouldReturnFilteredPage() {
+        Pageable pageable = PageRequest.of(0, 5);
+        // Filter dengan role sebagai Number (bukan objek Role)
+        Map<String, Object> filter = Map.of("role", 2L); // id role USER dari migration
+        Page<User> result = userRepository.findAll(pageable, filter);
+
+        assertThat(result.getTotalElements()).isEqualTo(3); // Semua user di-setup dengan role id=2
+        assertThat(result.getContent()).allMatch(u -> u.getRole() != null && u.getRole().getId() == 2L);
+    }
+
+    @Test
+    void findAll_withInvalidSortColumn_shouldNotThrow() {
+        Pageable pageable = PageRequest.of(0, 3, Sort.by("nonexistent").ascending());
+        // Should not throw, but may ignore the sort or fallback
+        Page<User> result = userRepository.findAll(pageable, Map.of());
+        assertThat(result.getContent()).isNotNull();
+    }
+
+    @Test
+    void findById_whenUserNotFound_shouldReturnEmptyOptional() {
+        Optional<User> result = userRepository.findById(9999L);
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void save_whenUserIsNull_shouldThrowException() {
+        assertThatThrownBy(() -> userRepository.save(null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void update_whenUserNotFound_shouldReturnZero() {
+        User notExist = new User("Ghost", "ghost@example.com");
+        notExist.setId(9999L);
+        notExist.setRole(savedRole);
+        int updatedRows = userRepository.update(notExist);
+        assertThat(updatedRows).isZero();
+    }
+
+    @Test
+    void findAll_withNullAndEmptyFilters_shouldReturnAllUsers() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<User> resultNull = userRepository.findAll(pageable, null);
+        Page<User> resultEmpty = userRepository.findAll(pageable, Map.of());
+        assertThat(resultNull.getTotalElements()).isEqualTo(resultEmpty.getTotalElements());
+    }
+
+    @Test
+    void loadUserByUsername_whenUserExists_shouldReturnUserDetails() {
+        UserDetails details = userRepository
+                .loadUserByUsername("alice@example.com");
+        assertThat(details.getUsername()).isEqualTo("alice@example.com");
+        assertThat(details.getAuthorities()).extracting("authority").contains("ROLE_USER");
+    }
+
+    @Test
+    void loadUserByUsername_whenUserNotFound_shouldThrowException() {
+        org.assertj.core.api.Assertions
+                .assertThatThrownBy(() -> userRepository.loadUserByUsername("notfound@example.com"))
+                .isInstanceOf(UsernameNotFoundException.class)
+                .hasMessageContaining("User not found with username");
     }
 }

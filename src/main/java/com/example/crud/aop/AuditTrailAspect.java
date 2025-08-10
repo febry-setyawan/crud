@@ -58,7 +58,7 @@ public class AuditTrailAspect {
      * 
      * @return Nama pengguna saat ini atau "SYSTEM" jika tidak ditemukan.
      */
-    private String getCurrentUsername() {
+    String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()
                 || "anonymousUser".equals(authentication.getName())) {

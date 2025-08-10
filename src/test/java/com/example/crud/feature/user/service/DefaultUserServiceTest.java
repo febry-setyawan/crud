@@ -31,71 +31,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DefaultUserServiceTest {
-    @Test
-    void getAllUsers_withUsernameAndPasswordFilter_shouldContainBothInFilterMap() {
-        // Arrange
-        UserFilterDto filterDto = new UserFilterDto();
-        filterDto.setUsername("user1");
-        filterDto.setPassword("pass1");
-        PageRequest pageable = PageRequest.of(0, 10);
-        Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
-
-        when(userRepository.findAll(eq(pageable), anyMap())).thenReturn(userPage);
-
-        // Act
-        userService.getAllUsers(pageable, filterDto);
-
-        // Assert
-        verify(userRepository).findAll(eq(pageable), mapCaptor.capture());
-        Map<String, Object> capturedMap = mapCaptor.getValue();
-        assertThat(capturedMap)
-            .containsKey("username")
-            .containsKey("password")
-            .containsEntry("password", "%pass1%")
-            .containsEntry("username", "%user1%");
-    }
-
-    @Test
-    void createUser_whenRequestDtoIsNull_shouldThrowException() {
-        // Act & Assert
-        assertThrows(NullPointerException.class, () -> {
-            userService.createUser(null);
-        });
-    }
-
-    @Test
-    void updateUser_whenRequestDtoIsNull_shouldThrowException() {
-        // Act & Assert
-        assertThrows(ResourceNotFoundException.class, () -> {
-            userService.updateUser(1L, null);
-        });
-    }
-
-    @Test
-    void getUserById_whenIdIsNull_shouldThrowException() {
-        // Act & Assert
-        assertThrows(ResourceNotFoundException.class, () -> {
-            userService.getUserById(null);
-        });
-    }
-
-    @Test
-    void deleteUser_whenIdIsNull_shouldReturnFalse() {
-        // Act
-        boolean result = userService.deleteUser(null);
-        // Assert
-        assertFalse(result);
-    }
-
-    @Test
-    void deleteUser_whenIdIsNegative_shouldReturnFalse() {
-        // Arrange
-        when(userRepository.deleteById(-1L)).thenReturn(0);
-        // Act
-        boolean result = userService.deleteUser(-1L);
-        // Assert
-        assertFalse(result);
-    }
 
     @Mock
     private UserRepository userRepository;
@@ -157,8 +92,8 @@ class DefaultUserServiceTest {
 
         // Pastikan service menambahkan wildcard '%' untuk pencarian LIKE
         assertThat(capturedMap)
-            .hasSize(1)
-            .containsEntry("username", "%admin@email.com%");
+                .hasSize(1)
+                .containsEntry("username", "%admin@email.com%");
     }
 
     @SuppressWarnings("unchecked")
@@ -214,7 +149,6 @@ class DefaultUserServiceTest {
         verify(userRepository, never()).save(any());
     }
 
-    // ...existing code...
     @Test
     void getUserById_whenUserExists_shouldReturnDto() {
         // Arrange
@@ -316,6 +250,105 @@ class DefaultUserServiceTest {
         // Act
         boolean result = userService.deleteUser(99L);
 
+        // Assert
+        assertFalse(result);
+    }
+
+     @Test
+    void getAllUsers_withRoleFilter_shouldContainRoleInFilterMap() {
+        // Arrange
+        UserFilterDto filterDto = new UserFilterDto();
+        Role filterRole = new Role("USER", "User role");
+        filterRole.setId(10L);
+        filterDto.setRole(filterRole);
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
+
+        when(userRepository.findAll(eq(pageable), anyMap())).thenReturn(userPage);
+
+        // Act
+        userService.getAllUsers(pageable, filterDto);
+
+        // Assert
+        verify(userRepository).findAll(eq(pageable), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+        assertThat(capturedMap)
+                .containsKey("role")
+                .containsEntry("role", filterRole);
+    }
+
+    @Test
+    void deleteUser_whenIdIsNull_shouldReturnFalse_edge() {
+        // Act
+        boolean result = userService.deleteUser(null);
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void deleteUser_whenIdIsNegative_shouldReturnFalse_edge() {
+        // Arrange
+        when(userRepository.deleteById(-123L)).thenReturn(0);
+        // Act
+        boolean result = userService.deleteUser(-123L);
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void getAllUsers_withUsernameAndPasswordFilter_shouldContainBothInFilterMap() {
+        // Arrange
+        UserFilterDto filterDto = new UserFilterDto();
+        filterDto.setUsername("user1");
+        filterDto.setPassword("pass1");
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
+
+        when(userRepository.findAll(eq(pageable), anyMap())).thenReturn(userPage);
+
+        // Act
+        userService.getAllUsers(pageable, filterDto);
+
+        // Assert
+        verify(userRepository).findAll(eq(pageable), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+        assertThat(capturedMap)
+                .containsKey("username")
+                .containsKey("password")
+                .containsEntry("password", "%pass1%")
+                .containsEntry("username", "%user1%");
+    }
+
+    @Test
+    void createUser_whenRequestDtoIsNull_shouldThrowException() {
+        // Act & Assert
+        assertThrows(NullPointerException.class, () -> {
+            userService.createUser(null);
+        });
+    }
+
+    @Test
+    void updateUser_whenRequestDtoIsNull_shouldThrowException() {
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.updateUser(1L, null);
+        });
+    }
+
+    @Test
+    void getUserById_whenIdIsNull_shouldThrowException() {
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.getUserById(null);
+        });
+    }
+
+    @Test
+    void deleteUser_whenIdIsNegative_shouldReturnFalse() {
+        // Arrange
+        when(userRepository.deleteById(-1L)).thenReturn(0);
+        // Act
+        boolean result = userService.deleteUser(-1L);
         // Assert
         assertFalse(result);
     }
