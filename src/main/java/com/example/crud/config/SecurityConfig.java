@@ -32,7 +32,8 @@ public class SecurityConfig {
                     request -> request.getRequestURI().startsWith("/h2-console"), // Nonaktifkan CSRF untuk H2 Console
                     request -> request.getRequestURI().startsWith("/actuator"), // Nonaktifkan CSRF untuk actuator
                     request -> request.getRequestURI().startsWith("/swagger-ui"), // Nonaktifkan CSRF untuk Swagger UI
-                    request -> request.getRequestURI().startsWith("/v3/api-docs") // Nonaktifkan CSRF untuk OpenAPI docs
+                    request -> request.getRequestURI().startsWith("/v3/api-docs"), // Nonaktifkan CSRF untuk OpenAPI docs
+                    request -> request.getRequestURI().startsWith("/api/auth")
             ))
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers(
