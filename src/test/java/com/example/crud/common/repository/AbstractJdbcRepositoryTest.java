@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class AbstractJdbcRepositoryTest {
+class AbstractJdbcRepositoryTest { 
 
     private DummyRepository repository;
     private JdbcClient jdbcClient;
@@ -224,6 +224,13 @@ class AbstractJdbcRepositoryTest {
         repoSpy.logQuery("SELECT 3", Map.of("a", 1));
         // Minimal assertion to satisfy test requirements
         assertThat(repoSpy).isNotNull();
+    }
+
+    @Test
+    void buildSortClause_withAlias_shouldWhitelistColumns_DESC() {
+        Sort sort = Sort.by(Sort.Order.desc("name"));
+        String clause = repository.buildSortClause(sort, "u");
+        assertThat(clause).contains("u.name DESC");
     }
 
     // Dummy entity and repository for testing
