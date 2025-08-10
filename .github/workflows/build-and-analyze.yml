@@ -53,7 +53,20 @@ jobs:
           -Dsonar.organization=${{ secrets.ORG_KEY }}
           -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
-      # 5. Install k6
+      # 5. Jalankan Spring Boot backend di background
+      - name: Start Spring Boot backend
+        run: mvn clean spring-boot:run &
+
+      # 6. Tunggu backend siap di port 8080
+      - name: Wait for backend to be ready
+        run: |
+          for i in {1..30}; do
+            nc -z localhost 8080 && echo "Backend is up!" && exit 0
+            sleep 2
+          done
+          echo "Backend did not start in time" && exit 1
+
+      # 7. Install k6
       - name: Install k6
         run: |
           sudo apt-get update
@@ -63,7 +76,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y k6
 
-      # 6. Jalankan k6 performance test di k6 Cloud
+      # 8. Jalankan k6 performance test di k6 Cloud (test ke localhost, hasil ke cloud)
       - name: Run k6 performance test (k6 Cloud)
         env:
           K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
