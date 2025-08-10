@@ -105,6 +105,31 @@ class AbstractJdbcRepositoryTest {
         assertThat(result).isEqualTo(1);
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    void findAll_withNullFilters_shouldNotFail() {
+        // Also cover the case when params(null) is called
+        when(jdbcClient.sql(anyString()).params(anyMap()).query(any(Class.class)).single()).thenReturn(0L);
+        // Cover both params(Map) and params(null) to avoid ambiguity
+        when(jdbcClient.sql(anyString()).params(anyMap()).query(any(Class.class)).single()).thenReturn(0L);
+        Pageable pageable = PageRequest.of(0, 1);
+        // Make sure count query always returns 0L, not null
+        when(jdbcClient.sql(anyString()).params(anyMap()).query(any(Class.class)).single()).thenReturn(0L);
+        when(jdbcClient.sql(anyString()).params(anyMap()).query(any(RowMapper.class)).list()).thenReturn(List.of());
+        Page<DummyEntity> page = repository.findAll(pageable, null);
+        assertThat(page.getTotalElements()).isZero();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void findAll_withEmptyFilters_shouldNotFail() {
+        Pageable pageable = PageRequest.of(0, 1);
+        when(jdbcClient.sql(anyString()).params(anyMap()).query(any(Class.class)).single()).thenReturn(0L);
+        when(jdbcClient.sql(anyString()).params(anyMap()).query(any(RowMapper.class)).list()).thenReturn(List.of());
+        Page<DummyEntity> page = repository.findAll(pageable, Map.of());
+        assertThat(page.getTotalElements()).isZero();
+    }
+
     // Dummy entity and repository for testing
     static class DummyEntity extends com.example.crud.common.model.BaseEntity<Long> {
         private String name;

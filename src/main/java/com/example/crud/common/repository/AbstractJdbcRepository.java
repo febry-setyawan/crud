@@ -72,21 +72,22 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
         return TimerUtil.time("findAll", () -> {
             // === QUERY 1: Menghitung total elemen dengan filter yang sama ===
             StringBuilder countSql = new StringBuilder("SELECT count(*) FROM %s".formatted(getTableName()));
-            if (filters != null && !filters.isEmpty()) {
-                String whereClause = buildWhereClause(filters);
+            Map<String, Object> safeFilters = (filters != null) ? filters : Map.of();
+            if (!safeFilters.isEmpty()) {
+                String whereClause = buildWhereClause(safeFilters);
                 countSql.append(" WHERE ").append(whereClause);
             }
-            
-            logQuery(countSql.toString(), filters);
+
+            logQuery(countSql.toString(), safeFilters);
             Long totalElements = jdbcClient.sql(countSql.toString())
-                                        .params(filters)
+                                        .params(safeFilters)
                                         .query(Long.class)
                                         .single();
 
             // === QUERY 2: Mengambil data untuk halaman saat ini ===
             StringBuilder dataSql = new StringBuilder("SELECT * FROM %s".formatted(getTableName()));
-            if (filters != null && !filters.isEmpty()) {
-                String whereClause = buildWhereClause(filters);
+            if (!safeFilters.isEmpty()) {
+                String whereClause = buildWhereClause(safeFilters);
                 dataSql.append(" WHERE ").append(whereClause);
             }
 
@@ -99,7 +100,7 @@ public abstract class AbstractJdbcRepository<T extends BaseEntity<ID>, ID> imple
             // Tambahkan pagination
             dataSql.append(" LIMIT :limit OFFSET :offset");
 
-            Map<String, Object> queryParams = new LinkedHashMap<>(filters != null ? filters : Map.of());
+            Map<String, Object> queryParams = new LinkedHashMap<>(safeFilters);
             queryParams.put("limit", pageable.getPageSize());
             queryParams.put("offset", pageable.getOffset());
 
