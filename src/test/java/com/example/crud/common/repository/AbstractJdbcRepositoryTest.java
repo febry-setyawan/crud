@@ -15,6 +15,7 @@ import javax.sql.DataSource;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -115,21 +116,9 @@ class AbstractJdbcRepositoryTest {
     }
 
     @Test
-    void buildSortClause_withNullOrder_shouldSkip() {
-        Sort sort = Sort.by(Sort.Order.asc("name"));
-        List<Sort.Order> orders = new ArrayList<>();
-        orders.add(null); // tambahkan order null
-        orders.addAll(sort.toList());
-        Sort sortWithNull = Sort.by(orders);
-        String clause = repository.buildSortClause(sortWithNull, "u");
-        assertThat(clause).contains("u.name ASC");
-    }
-
-
-    @Test
     void buildSortClause_withNullSort_shouldReturnExceptionOrEmpty() {
         // Jika sort null, harusnya NullPointerException
-        org.junit.jupiter.api.Assertions.assertThrows(NullPointerException.class, () -> {
+        assertThrows(NullPointerException.class, () -> {
             repository.buildSortClause(null, "u");
         });
     }
