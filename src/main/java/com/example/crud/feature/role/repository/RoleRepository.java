@@ -12,13 +12,15 @@ import java.util.Map;
 import java.util.Set;
 
 @Repository
+
 public class RoleRepository extends AbstractJdbcRepository<Role, Long> {
 
+    private static final String DESCRIPTION = "description";
     private static final RowMapper<Role> ROLE_ROW_MAPPER = (rs, rowNum) -> {
         Role role = new Role();
         role.setId(rs.getLong("id"));
         role.setName(rs.getString("name"));
-        role.setDescription(rs.getString("description"));
+        role.setDescription(rs.getString(DESCRIPTION));
         return role;
     };
 
@@ -45,12 +47,12 @@ public class RoleRepository extends AbstractJdbcRepository<Role, Long> {
     protected Map<String, Object> getUpdateParameters(Role role) {
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("name", role.getName());
-        params.put("description", role.getDescription());
+        params.put(DESCRIPTION, role.getDescription());
         return params;
     }
 
     @Override
     protected Set<String> getAllowedSortColumns() {
-        return Set.of("id", "name", "description");
+        return Set.of("id", "name", DESCRIPTION);
     }
 }

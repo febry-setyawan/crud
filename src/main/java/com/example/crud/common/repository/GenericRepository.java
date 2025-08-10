@@ -6,10 +6,10 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-public interface GenericRepository<T, ID> {
+public interface GenericRepository<T, I> {
     T save(T entity);
-    Optional<T> findById(ID id);
+    Optional<T> findById(I id);
     Page<T> findAll(Pageable pageable, Map<String, Object> filters);
     int update(T entity);
-    int deleteById(ID id);
+    int deleteById(I id);
 }

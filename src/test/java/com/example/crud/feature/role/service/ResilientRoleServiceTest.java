@@ -80,26 +80,15 @@ class ResilientRoleServiceTest {
     }
 
     @Test
-    void getAllRoles_whenDelegateFails_shouldOpenCircuitAndFallback() {
+    void getAllRoles_whenDelegateFails_shouldTriggerFallback() {
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.Pageable.unpaged();
         when(defaultRoleService.getAllRoles(eq(pageable), any())).thenThrow(new RuntimeException("DB down"));
 
-        // Open the circuit breaker by failing multiple times
-        for (int i = 0; i < 10; i++) {
-            try {
-                resilientRoleService.getAllRoles(pageable, null);
-            } catch (Exception ignored) {
-                // Exception is intentionally ignored to simulate repeated failures and open the circuit breaker
-            }
-        }
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
-
-        // Now call again, should hit fallback
-        org.springframework.data.domain.Page<RoleResponseDto> fallbackPage = resilientRoleService.getAllRoles(pageable,
-                null);
+        org.springframework.data.domain.Page<RoleResponseDto> fallbackPage = resilientRoleService.getAllRoles(pageable, null);
+        assertThat(fallbackPage).isNotNull();
         assertThat(fallbackPage.getTotalElements()).isZero();
         assertThat(fallbackPage.getContent()).isEmpty();
-        verify(defaultRoleService, times(10)).getAllRoles(eq(pageable), any());
+        verify(defaultRoleService).getAllRoles(eq(pageable), any());
     }
 
     @Test

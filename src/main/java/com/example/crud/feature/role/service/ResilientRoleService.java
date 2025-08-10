@@ -65,7 +65,11 @@ public class ResilientRoleService implements RoleService {
         return new RoleResponseDto(id, "Fallback Role", "Service is currently unavailable");
     }
 
-    private Page<RoleResponseDto> fallbackGetAllRoles(Pageable pageable, RoleFilterDto filters, Throwable t) {
+    /**
+     * Fallback for getAllRoles. The 'filter' parameter is required by Resilience4j fallback signature.
+     */
+    @SuppressWarnings("unused")
+    private Page<RoleResponseDto> fallbackGetAllRoles(Pageable pageable, RoleFilterDto filter, Throwable t) {
         log.error("Circuit breaker opened for getAllRoles", t);
         return new PageImpl<>(Collections.emptyList(), pageable, 0);
     }

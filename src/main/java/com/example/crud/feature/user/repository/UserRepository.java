@@ -30,6 +30,8 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
     private static final String ROLE_ID = "role_id";
+    private static final String CREATED_AT = "created_at";
+    private static final String UPDATED_AT = "updated_at";
     private static final Set<String> ALLOWED_FILTER_COLUMNS = Set.of(USERNAME, ROLE_ID, PASSWORD);
 
     static final RowMapper<User> USER_ROW_MAPPER = (rs, rowNum) -> {
@@ -39,9 +41,9 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
         user.setUsername(rs.getString("user_username"));
         user.setPassword(rs.getString("user_password"));
         // Mapping kolom audit
-        user.setCreatedAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null);
+    user.setCreatedAt(rs.getTimestamp(CREATED_AT) != null ? rs.getTimestamp(CREATED_AT).toLocalDateTime() : null);
         user.setCreatedBy(rs.getString("created_by"));
-        user.setUpdatedAt(rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null);
+    user.setUpdatedAt(rs.getTimestamp(UPDATED_AT) != null ? rs.getTimestamp(UPDATED_AT).toLocalDateTime() : null);
         user.setUpdatedBy(rs.getString("updated_by"));
 
         // Jika ada role yang ter-join, buat objek Role
@@ -84,9 +86,9 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
             params.put(ROLE_ID, user.getRole().getId());
         }
         // Menambahkan parameter audit
-        params.put("created_at", user.getCreatedAt());
+        params.put(CREATED_AT, user.getCreatedAt());
         params.put("created_by", user.getCreatedBy());
-        params.put("updated_at", user.getUpdatedAt());
+        params.put(UPDATED_AT, user.getUpdatedAt());
         params.put("updated_by", user.getUpdatedBy());
         return params;
     }
