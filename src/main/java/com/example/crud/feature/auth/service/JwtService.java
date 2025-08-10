@@ -1,4 +1,3 @@
-
 package com.example.crud.feature.auth.service;
 
 import io.jsonwebtoken.Jwts;
@@ -39,9 +38,15 @@ public class JwtService {
         return refreshTokenCacheName;
     }
 
+    // Overload agar kode lama tetap jalan (tanpa roles)
     public String generateToken(String username) {
+        return generateToken(username, java.util.Collections.emptyList());
+    }
+
+    public String generateToken(String username, java.util.List<String> roles) {
         return Jwts.builder()
                 .setSubject(username)
+                .claim("roles", roles)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(SignatureAlgorithm.HS256, jwtSecret)

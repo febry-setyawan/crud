@@ -5,12 +5,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.*;
 
+import java.lang.reflect.Field;
+import java.util.List;
+
 class JwtServiceTest {
-    
     private JwtService jwtService;
     private CacheManager cacheManager;
     private Cache cache;
@@ -125,5 +130,39 @@ class JwtServiceTest {
         service.removeRefreshToken("s3cr3t");
         // No exception means success
         assertThatCode(() -> service.removeRefreshToken("s3cr3t")).doesNotThrowAnyException();
+    }
+
+    @Test
+    void generateToken_withRoles_shouldContainRolesClaim() throws Exception {
+        String username = "testuser";
+        String secret = "mySecretKey1234567890";
+        long expiration = 3600000L;
+        JwtService service = new JwtService(mock(CacheManager.class));
+
+        // Set private fields
+        Field secretField = JwtService.class.getDeclaredField("jwtSecret");
+        secretField.setAccessible(true);
+        secretField.set(service, secret);
+
+        Field expField = JwtService.class.getDeclaredField("jwtExpirationMs");
+        expField.setAccessible(true);
+        expField.set(service, expiration);
+
+        Field cacheNameField = JwtService.class.getDeclaredField("refreshTokenCacheName");
+        cacheNameField.setAccessible(true);
+        cacheNameField.set(service, "tokens");
+
+        List<String> roles = List.of("ROLE_ADMIN", "ROLE_USER");
+        String token = service.generateToken(username, roles);
+
+        // Parse token and check claims
+        Claims claims = Jwts.parser()
+                .setSigningKey(secret)
+                .parseClaimsJws(token)
+                .getBody();
+        assertThat(claims.getSubject()).isEqualTo(username);
+        @SuppressWarnings("unchecked")
+        List<String> rolesClaim = (List<String>) claims.get("roles", List.class);
+        assertThat(rolesClaim).containsExactly("ROLE_ADMIN", "ROLE_USER");
     }
 }

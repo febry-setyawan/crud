@@ -87,6 +87,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "User berhasil diperbarui"),
             @ApiResponse(responseCode = "404", description = "User dengan ID tersebut tidak ditemukan")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDto> updateUser(@PathVariable Long id,
             @Valid @RequestBody UserRequestDto userDto) {
@@ -98,6 +99,7 @@ public class UserController {
             @ApiResponse(responseCode = "204", description = "User berhasil dihapus"),
             @ApiResponse(responseCode = "404", description = "User dengan ID tersebut tidak ditemukan")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         if (userService.deleteUser(id)) {

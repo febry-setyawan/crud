@@ -28,7 +28,13 @@ public class AuthenticationService {
                         authRequest.getUsername(),
                         authRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String accessToken = jwtService.generateToken(authRequest.getUsername());
+        // Ambil role dari authentication principal
+        Object principal = authentication.getPrincipal();
+        java.util.List<String> roles = new java.util.ArrayList<>();
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
+            userDetails.getAuthorities().forEach(a -> roles.add(a.getAuthority()));
+        }
+        String accessToken = jwtService.generateToken(authRequest.getUsername(), roles);
         String refreshToken = jwtService.generateRefreshToken(authRequest.getUsername());
         return new RefreshResponse(accessToken, refreshToken);
     }

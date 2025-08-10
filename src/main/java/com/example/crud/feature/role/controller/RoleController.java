@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,6 +35,7 @@ public class RoleController {
             @ApiResponse(responseCode = "201", description = "Role berhasil dibuat"),
             @ApiResponse(responseCode = "400", description = "Input tidak valid")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<RoleResponseDto> createRole(@Valid @RequestBody RoleRequestDto roleDto) {
         RoleResponseDto createdRole = roleService.createRole(roleDto);
@@ -67,6 +69,7 @@ public class RoleController {
             @ApiResponse(responseCode = "200", description = "Role berhasil diperbarui"),
             @ApiResponse(responseCode = "404", description = "Role dengan ID tersebut tidak ditemukan")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<RoleResponseDto> updateRole(@PathVariable Long id,
             @Valid @RequestBody RoleRequestDto roleDto) {
@@ -78,6 +81,7 @@ public class RoleController {
             @ApiResponse(responseCode = "204", description = "Role berhasil dihapus"),
             @ApiResponse(responseCode = "404", description = "Role dengan ID tersebut tidak ditemukan")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRole(@PathVariable Long id) {
         if (roleService.deleteRole(id)) {

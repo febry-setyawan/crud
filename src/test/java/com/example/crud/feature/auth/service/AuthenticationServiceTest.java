@@ -19,6 +19,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import java.util.List;
+
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
 @ExtendWith(MockitoExtension.class)
 class AuthenticationServiceTest {
 
@@ -50,10 +56,13 @@ class AuthenticationServiceTest {
 
     @Test
     void login_shouldReturnTokens_whenCredentialsAreValid() {
+        // Mock UserDetails with authorities
+        UserDetails userDetails = new User("user", "password", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
         Authentication authentication = mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(userDetails);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
-        when(jwtService.generateToken("user")).thenReturn("accessToken");
+        when(jwtService.generateToken(eq("user"), anyList())).thenReturn("accessToken");
         when(jwtService.generateRefreshToken("user")).thenReturn("refreshToken");
 
         RefreshResponse response = authenticationService.login(authRequest);
@@ -61,6 +70,7 @@ class AuthenticationServiceTest {
         assertThat(response.getAccessToken()).isEqualTo("accessToken");
         assertThat(response.getRefreshToken()).isEqualTo("refreshToken");
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(jwtService).generateToken(eq("user"), anyList());
     }
 
     @Test
@@ -76,7 +86,7 @@ class AuthenticationServiceTest {
     @Test
     void refresh_shouldReturnNewTokens_whenRefreshTokenIsValid() {
         when(jwtService.getCacheManager()).thenReturn(cacheManager);
-    when(cacheManager.getCache("tokens")).thenReturn(cache);
+        when(cacheManager.getCache("tokens")).thenReturn(cache);
         when(cache.get("validToken", String.class)).thenReturn("user");
         when(jwtService.generateToken("user")).thenReturn("newAccessToken");
         when(jwtService.generateRefreshToken("user")).thenReturn("newRefreshToken");
@@ -91,7 +101,7 @@ class AuthenticationServiceTest {
     @Test
     void refresh_shouldThrowException_whenRefreshTokenIsInvalid() {
         when(jwtService.getCacheManager()).thenReturn(cacheManager);
-    when(cacheManager.getCache("tokens")).thenReturn(cache);
+        when(cacheManager.getCache("tokens")).thenReturn(cache);
         when(cache.get("invalidToken", String.class)).thenReturn(null);
 
         assertThatThrownBy(() -> authenticationService.refresh("invalidToken"))
