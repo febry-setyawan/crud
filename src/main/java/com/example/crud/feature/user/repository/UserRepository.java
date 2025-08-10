@@ -113,14 +113,14 @@ public class UserRepository extends AbstractJdbcRepository<User, Long> implement
 
     @Override
     public Optional<User> findById(Long id) {
-    return TimerUtil.time("findById", () -> {
-        Map<String, Object> params = Map.of(ID, id);
-        logQuery(FIND_BY_ID_SQL, params);
-        return jdbcClient.sql(FIND_BY_ID_SQL)
-            .param(ID, id)
-            .query(getRowMapper())
-            .optional();
-    });
+        return TimerUtil.time("findById", () -> {
+            Map<String, Object> params = Map.of(ID, id);
+            logQuery(FIND_BY_ID_SQL, params);
+            return jdbcClient.sql(FIND_BY_ID_SQL)
+                    .param(ID, id)
+                    .query(getRowMapper())
+                    .optional();
+        });
     }
 
     @Override
