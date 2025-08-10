@@ -51,8 +51,8 @@ class DefaultUserServiceTest {
         assertThat(capturedMap)
             .containsKey("username")
             .containsKey("password")
-            .containsEntry("password", "%pass1%");
-        assertThat(capturedMap.get("username")).isEqualTo("%user1%");
+            .containsEntry("password", "%pass1%")
+            .containsEntry("username", "%user1%");
     }
 
     @Test

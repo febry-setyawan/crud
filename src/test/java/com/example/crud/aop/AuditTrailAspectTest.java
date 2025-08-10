@@ -74,21 +74,38 @@ class AuditTrailAspectTest {
     }
 
     @Test
-    void beforeUpdate_shouldUpdateAuditFields() throws InterruptedException {
+    void beforeUpdate_shouldUpdateAuditFields() {
 
-        // Add a trivial assertion to ensure the test runs
-        assertThat(true).isTrue();
-    }
-
-    @Test
-    @WithMockUser(username = "update_user")
-    void beforeUpdate_shouldUpdateAuditFields_withMockUser() throws InterruptedException {
         // Given
         AuditableTestEntity entity = auditableTestEntityRepository.save(new AuditableTestEntity(0L, "Initial Name"));
         LocalDateTime initialUpdatedAt = entity.getUpdatedAt();
 
         // When
-        Thread.sleep(10); // Ensure timestamp changes
+        AuditableTestEntity toUpdate = auditableTestEntityRepository.findById(entity.getId()).orElseThrow();
+        toUpdate.setName("Updated Name");
+        auditableTestEntityRepository.update(toUpdate);
+
+        // Reload entity from repository
+        AuditableTestEntity reloaded = auditableTestEntityRepository.findById(entity.getId()).orElseThrow();
+
+        // Then
+        assertThat(reloaded.getUpdatedAt()).isAfter(initialUpdatedAt);
+        assertThat(reloaded.getUpdatedBy()).isNotNull();
+    }
+
+    @Test
+    @WithMockUser(username = "update_user")
+    void beforeUpdate_shouldUpdateAuditFields_withMockUser() {
+        // Given
+        AuditableTestEntity entity = auditableTestEntityRepository.save(new AuditableTestEntity(0L, "Initial Name"));
+        LocalDateTime initialUpdatedAt = entity.getUpdatedAt();
+
+        // When
+        // Wait until the system clock moves forward to ensure updatedAt will be different
+        LocalDateTime now = LocalDateTime.now();
+        while (!now.isAfter(initialUpdatedAt)) {
+            now = LocalDateTime.now();
+        }
         AuditableTestEntity toUpdate = auditableTestEntityRepository.findById(entity.getId()).orElseThrow();
         toUpdate.setName("Updated Name");
         auditableTestEntityRepository.update(toUpdate);
