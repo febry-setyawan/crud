@@ -1,0 +1,12 @@
+"java.configuration.updateBuildConfiguration": "automatic",
+"java.compile.nullAnalysis.mode": "automatic",
+"java.compile.nullAnalysis.nonnullByDefault": [
+  "org.eclipse.jdt.annotation.NonNullByDefault"
+],
+"java.configuration.runtimes": [
+  {
+    "name": "JavaSE-21",
+    "path": "/Users/febry/.jenv/versions/21/bin/java", 
+    "default": true
+  }
+]

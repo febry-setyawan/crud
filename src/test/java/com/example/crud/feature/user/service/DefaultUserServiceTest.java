@@ -1,0 +1,459 @@
+package com.example.crud.feature.user.service;
+
+import com.example.crud.common.exception.ResourceNotFoundException;
+import com.example.crud.feature.role.model.Role;
+import com.example.crud.feature.role.repository.RoleRepository;
+import com.example.crud.feature.user.dto.UserFilterDto;
+import com.example.crud.feature.user.dto.UserMapper;
+import com.example.crud.feature.user.dto.UserRequestDto;
+import com.example.crud.feature.user.dto.UserResponseDto;
+import com.example.crud.feature.user.model.User;
+import com.example.crud.feature.user.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class DefaultUserServiceTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private RoleRepository roleRepository; // <-- Mock untuk RoleRepository
+
+    @Mock
+    private UserMapper userMapper;
+
+    private UserService userService;
+
+    // Objek data untuk testing
+    private User user;
+    private Role role;
+    private UserResponseDto userResponseDto;
+
+    @Captor
+    private ArgumentCaptor<Map<String, Object>> mapCaptor;
+
+    @BeforeEach
+    void setUp() {
+        // Inisialisasi service dengan semua mock
+        userService = new DefaultUserService(userRepository, roleRepository, userMapper);
+
+        // Siapkan data Role dan User
+        role = new Role("ADMIN", "Administrator");
+        role.setId(1L);
+
+        user = new User("Test User", "test@example.com");
+        user.setId(1L);
+        user.setRole(role);
+
+        // Siapkan DTO response
+        // Di dunia nyata, mapper akan menangani ini, tapi untuk mock kita definisikan
+        // manual
+        userResponseDto = new UserResponseDto(1L, "Test User", "test@example.com", null);
+    }
+
+    @Test
+    void getAllUsers_withFilter_shouldBuildMapWithWildcardsAndCallRepository() {
+        // Arrange
+        UserFilterDto filterDto = new UserFilterDto();
+        filterDto.setUsername("admin@email.com"); // Filter dengan 'admin@email.com'
+
+        Page<User> userPage = new PageImpl<>(List.of(user));
+        when(userRepository.findAll(any(), anyMap())).thenReturn(userPage);
+        when(userMapper.toDto(any(User.class))).thenReturn(userResponseDto);
+
+        // Act
+        userService.getAllUsers(PageRequest.of(0, 1), filterDto);
+
+        // Assert
+        // Verifikasi bahwa service membangun Map dengan benar sebelum memanggil
+        // repository
+        verify(userRepository).findAll(any(), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+
+        // Pastikan service menambahkan wildcard '%' untuk pencarian LIKE
+        assertThat(capturedMap)
+                .hasSize(1)
+                .containsEntry("username", "%admin@email.com%");
+    }
+
+    @Test
+    void getAllUsers_withNoFilter_shouldCallRepositoryWithEmptyMap() {
+        // Arrange
+        UserFilterDto emptyFilter = new UserFilterDto(); // DTO filter kosong
+        Page<User> userPage = new PageImpl<>(List.of(user));
+        when(userRepository.findAll(any(), anyMap())).thenReturn(userPage);
+        when(userMapper.toDto(any(User.class))).thenReturn(userResponseDto);
+
+        // Act
+        userService.getAllUsers(PageRequest.of(0, 1), emptyFilter);
+
+        // Assert
+        verify(userRepository).findAll(any(), mapCaptor.capture());
+        // Pastikan map yang dikirim ke repository kosong
+        assertThat(mapCaptor.getValue()).isEmpty();
+    }
+
+    @Test
+    void getAllUsers_withBlankUsername_shouldNotAddUsernameToFilterMap() {
+        // Arrange
+        UserFilterDto filterDto = new UserFilterDto();
+        filterDto.setUsername("   "); // username blank
+        Page<User> userPage = new PageImpl<>(List.of(user));
+        when(userRepository.findAll(any(), anyMap())).thenReturn(userPage);
+        when(userMapper.toDto(any(User.class))).thenReturn(userResponseDto);
+
+        // Act
+        userService.getAllUsers(PageRequest.of(0, 1), filterDto);
+
+        // Assert
+        verify(userRepository).findAll(any(), mapCaptor.capture());
+        // Pastikan map yang dikirim ke repository tidak mengandung key 'username'
+        assertThat(mapCaptor.getValue()).doesNotContainKey("username");
+    }
+
+    @Test
+    void createUser_whenRoleExists_shouldSaveUserWithRole() {
+        // Arrange
+        UserRequestDto requestDto = new UserRequestDto("admin@email.com", "s3cr3t", 1L);
+        User userToSave = new User("admin@email.com", "s3cr3t"); // User tanpa role dari mapper
+
+        when(roleRepository.findById(1L)).thenReturn(Optional.of(role));
+        when(userMapper.toEntity(any(UserRequestDto.class))).thenReturn(userToSave);
+        when(userRepository.save(any(User.class))).thenReturn(user); // Kembalikan user lengkap dengan role
+        when(userMapper.toDto(any(User.class))).thenReturn(userResponseDto);
+
+        // Act
+        userService.createUser(requestDto);
+
+        // Assert
+        verify(roleRepository).findById(1L);
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getRole()).isNotNull();
+        assertThat(userCaptor.getValue().getRole().getId()).isEqualTo(1L);
+    }
+
+    @Test
+    void createUser_whenRoleNotFound_shouldThrowException() {
+        // Arrange
+        UserRequestDto requestDto = new UserRequestDto("admin@email.com", "s3cr3t", 99L);
+        when(roleRepository.findById(99L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.createUser(requestDto);
+        });
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void getUserById_whenUserExists_shouldReturnDto() {
+        // Arrange
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userMapper.toDto(user)).thenReturn(userResponseDto);
+
+        // Act
+        UserResponseDto result = userService.getUserById(1L);
+
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(result.id()).isEqualTo(1L);
+    }
+
+    @Test
+    void getUserById_whenUserDoesNotExist_shouldThrowException() {
+        // Arrange
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.getUserById(99L);
+        });
+    }
+
+    @Test
+    void updateUser_whenUserAndRoleExist_shouldUpdateAndReturnDto() {
+        // Arrange
+        UserRequestDto updateDto = new UserRequestDto("admin@email.com", "s3cr3t", 2L);
+        Role newRole = new Role("USER", "Regular user");
+        newRole.setId(2L);
+        UserResponseDto updatedResponse = new UserResponseDto(1L, "admin@email.com", "new-s3cr3t", null);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(roleRepository.findById(2L)).thenReturn(Optional.of(newRole));
+        when(userMapper.toDto(any(User.class))).thenReturn(updatedResponse);
+
+        // Act
+        userService.updateUser(1L, updateDto);
+
+        // Assert
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).update(userCaptor.capture());
+        assertThat(userCaptor.getValue().getUsername()).isEqualTo("admin@email.com");
+        assertThat(userCaptor.getValue().getRole().getId()).isEqualTo(2L);
+    }
+
+    @Test
+    void updateUser_whenUserNotFound_shouldThrowException() {
+        // Arrange
+        UserRequestDto updateDto = new UserRequestDto("admin@email.com", "new-s3cr3t", 1L);
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.updateUser(99L, updateDto);
+        });
+        verify(roleRepository, never()).findById(anyLong());
+    }
+
+    @Test
+    void updateUser_whenRoleNotFound_shouldThrowException() {
+        // Arrange
+        UserRequestDto updateDto = new UserRequestDto("admin@email.com", "new-s3cr3t", 99L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(roleRepository.findById(99L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.updateUser(1L, updateDto);
+        });
+        verify(userRepository, never()).update(any(User.class));
+    }
+
+    @Test
+    void getAllUsers_withPasswordFilter_shouldContainPasswordInFilterMap() {
+        // Arrange
+        UserFilterDto filterDto = new UserFilterDto();
+        filterDto.setPassword("password123");
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
+
+        when(userRepository.findAll(eq(pageable), anyMap())).thenReturn(userPage);
+
+        // Act
+        userService.getAllUsers(pageable, filterDto);
+
+        // Assert
+        verify(userRepository).findAll(eq(pageable), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+        assertThat(capturedMap).containsEntry("password", "%password123%");
+    }
+
+    @Test
+    void deleteUser_whenUserNotFound_shouldReturnFalse() {
+        // Arrange
+        when(userRepository.deleteById(99L)).thenReturn(0);
+
+        // Act
+        boolean result = userService.deleteUser(99L);
+
+        // Assert
+        assertFalse(result);
+    }
+
+     @Test
+    void getAllUsers_withRoleFilter_shouldContainRoleInFilterMap() {
+        // Arrange
+        UserFilterDto filterDto = new UserFilterDto();
+        Role filterRole = new Role("USER", "User role");
+        filterRole.setId(10L);
+        filterDto.setRole(filterRole);
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
+
+        when(userRepository.findAll(eq(pageable), anyMap())).thenReturn(userPage);
+
+        // Act
+        userService.getAllUsers(pageable, filterDto);
+
+        // Assert
+        verify(userRepository).findAll(eq(pageable), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+        assertThat(capturedMap)
+                .containsKey("role")
+                .containsEntry("role", filterRole);
+    }
+
+    @Test
+    void deleteUser_whenIdIsNull_shouldReturnFalse_edge() {
+        // Act
+        boolean result = userService.deleteUser(null);
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void deleteUser_whenIdIsNegative_shouldReturnFalse_edge() {
+        // Arrange
+        when(userRepository.deleteById(-123L)).thenReturn(0);
+        // Act
+        boolean result = userService.deleteUser(-123L);
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void getAllUsers_withUsernameAndPasswordFilter_shouldContainBothInFilterMap() {
+        // Arrange
+        UserFilterDto filterDto = new UserFilterDto();
+        filterDto.setUsername("user1");
+        filterDto.setPassword("pass1");
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
+
+        when(userRepository.findAll(eq(pageable), anyMap())).thenReturn(userPage);
+
+        // Act
+        userService.getAllUsers(pageable, filterDto);
+
+        // Assert
+        verify(userRepository).findAll(eq(pageable), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+        assertThat(capturedMap)
+                .containsKey("username")
+                .containsKey("password")
+                .containsEntry("password", "%pass1%")
+                .containsEntry("username", "%user1%");
+    }
+
+    @Test
+    void createUser_whenRequestDtoIsNull_shouldThrowException() {
+        // Act & Assert
+        assertThrows(NullPointerException.class, () -> {
+            userService.createUser(null);
+        });
+    }
+
+    @Test
+    void updateUser_whenRequestDtoIsNull_shouldThrowException() {
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.updateUser(1L, null);
+        });
+    }
+
+    @Test
+    void getUserById_whenIdIsNull_shouldThrowException() {
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.getUserById(null);
+        });
+    }
+
+    @Test
+    void deleteUser_whenIdIsNegative_shouldReturnFalse() {
+        // Arrange
+        when(userRepository.deleteById(-1L)).thenReturn(0);
+        // Act
+        boolean result = userService.deleteUser(-1L);
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void getAllUsers_withBlankPasswordAndNullRole_shouldNotAddToFilterMap() {
+        // Arrange
+        UserFilterDto filterDto = new UserFilterDto();
+        filterDto.setUsername("user1");
+        filterDto.setPassword("   "); // blank password
+        filterDto.setRole(null); // null role
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
+        when(userRepository.findAll(eq(pageable), anyMap())).thenReturn(userPage);
+
+        // Act
+        userService.getAllUsers(pageable, filterDto);
+
+        // Assert
+        verify(userRepository).findAll(eq(pageable), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+        assertThat(capturedMap)
+            .containsKey("username")
+            .doesNotContainKey("password")
+            .doesNotContainKey("role");
+    }
+
+    @Test
+    void getAllUsers_withNullPasswordAndBlankRole_shouldNotAddToFilterMap() {
+        // Arrange
+        UserFilterDto filterDto = new UserFilterDto();
+        filterDto.setUsername("user2");
+        filterDto.setPassword(null); // null password
+        Role blankRole = new Role();
+        blankRole.setId(null); // blank id
+        filterDto.setRole(blankRole);
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
+        when(userRepository.findAll(eq(pageable), anyMap())).thenReturn(userPage);
+
+        // Act
+        userService.getAllUsers(pageable, filterDto);
+
+        // Assert
+        verify(userRepository).findAll(eq(pageable), mapCaptor.capture());
+        Map<String, Object> capturedMap = mapCaptor.getValue();
+        assertThat(capturedMap)
+            .containsKey("username")
+            .doesNotContainKey("password")
+            .doesNotContainKey("role");
+    }
+
+    @Test
+    void deleteUser_whenUserFound_shouldReturnTrue() {
+        // Arrange
+        when(userRepository.deleteById(1L)).thenReturn(1);
+        // Act
+        boolean result = userService.deleteUser(1L);
+        // Assert
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    void updateUser_whenRequestDtoFieldsAreNull_shouldThrowException() {
+        // Arrange
+        UserRequestDto updateDto = new UserRequestDto(null, null, null); // Semua field null
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        // Tidak perlu stubbing roleRepository.findById(null)
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.updateUser(1L, updateDto);
+        });
+    }
+
+    @Test
+    void updateUser_whenRequestDtoUsernameAndPasswordBlank_shouldUpdateAndReturnDto() {
+        // Arrange
+        UserRequestDto updateDto = new UserRequestDto("   ", "   ", 1L); // username dan password blank
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(roleRepository.findById(1L)).thenReturn(Optional.of(role));
+        when(userMapper.toDto(any(User.class))).thenReturn(userResponseDto);
+
+        // Act
+        userService.updateUser(1L, updateDto);
+
+        // Assert
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).update(userCaptor.capture());
+        assertThat(userCaptor.getValue().getUsername()).isEqualTo("   "); // Di-set blank sesuai implementasi
+        assertThat(userCaptor.getValue().getPassword()).isEqualTo("   "); // Di-set blank sesuai implementasi
+    }
+}

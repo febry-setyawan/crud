@@ -1,0 +1,83 @@
+# version: '3.8'
+
+services:
+  # Layanan untuk database PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: crud_db
+    environment:
+      POSTGRES_DB: proddb
+      POSTGRES_USER: produser
+      POSTGRES_PASSWORD: iSTbRABStIon
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U produser -d proddb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Layanan untuk Spring Boot Admin Server
+  admin-server:
+    image: codecentric/spring-boot-admin:3.4.1
+    container_name: admin_server
+    ports:
+      - "8070:8070"
+    environment:
+      SERVER_PORT: 8070
+      SPRING_BOOT_ADMIN_SERVER_WEB_ADMIN_USERNAME: admin
+      SPRING_BOOT_ADMIN_SERVER_WEB_ADMIN_PASSWORD: admin
+
+  # Layanan untuk Spring Cloud Eureka Server
+  eureka-server:
+    image: springcloud/demo-eureka-server:latest
+    container_name: eureka_server
+    ports:
+      - "8761:8761"
+
+  # Layanan untuk Spring Cloud Gateway
+  # api-gateway:
+  #   # image: springcloud/spring-cloud-gateway
+  #   image: springcommunity/spring-petclinic-api-gateway
+  #   container_name: api_gateway
+  #   depends_on:
+  #     - eureka-server
+  #   ports:
+  #     - "8088:8080"
+  #   environment:
+  #     EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+  #     SPRING_CLOUD_GATEWAY_ROUTES_0_ID: crud-service
+  #     SPRING_CLOUD_GATEWAY_ROUTES_0_URI: lb://crud
+  #     SPRING_CLOUD_GATEWAY_ROUTES_0_PREDICATES_0: Path=/api/**
+
+  # Layanan untuk aplikasi Spring Boot Anda
+  app:
+    build: .
+    container_name: crud_app
+    depends_on:
+      db:
+        condition: service_healthy
+      admin-server:
+        condition: service_started
+      eureka-server:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    environment:
+      # Override konfigurasi database untuk menunjuk ke layanan 'db'
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/proddb
+      SPRING_DATASOURCE_USERNAME: produser
+      SPRING_DATASOURCE_PASSWORD: iSTbRABStIon
+      # Variabel untuk menunjuk ke admin-server di jaringan Docker
+      SPRING_BOOT_ADMIN_CLIENT_URL: http://admin-server:8070
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "*"
+      # Variabel untuk mendaftarkan diri ke Eureka
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      EUREKA_INSTANCE_PREFER_IPADDRESS: false
+
+# Volume untuk menyimpan data PostgreSQL secara persisten
+volumes:
+  postgres_data:

@@ -1,0 +1,58 @@
+
+package com.example.crud.feature.auth.service;
+
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+import com.example.crud.common.exception.InvalidRefreshTokenException;
+import com.example.crud.feature.auth.dto.AuthRequest;
+import com.example.crud.feature.auth.dto.RefreshResponse;
+
+import org.springframework.security.core.userdetails.UserDetails;
+
+@Service
+public class AuthenticationService {
+
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+
+    public AuthenticationService(AuthenticationManager authenticationManager, JwtService jwtService) {
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
+    }
+
+    public RefreshResponse login(AuthRequest authRequest) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        authRequest.getUsername(),
+                        authRequest.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        // Ambil role dari authentication principal
+        Object principal = authentication.getPrincipal();
+        java.util.List<String> roles = new java.util.ArrayList<>();
+        if (principal instanceof UserDetails userDetails) {
+            userDetails.getAuthorities().forEach(a -> roles.add(a.getAuthority()));
+        }
+        String accessToken = jwtService.generateToken(authRequest.getUsername(), roles);
+        String refreshToken = jwtService.generateRefreshToken(authRequest.getUsername());
+        return new RefreshResponse(accessToken, refreshToken);
+    }
+
+    public RefreshResponse refresh(String refreshToken) {
+    String username = jwtService.getCacheManager().getCache(jwtService.getRefreshTokenCacheName()).get(refreshToken, String.class);
+        if (username == null) {
+            throw new InvalidRefreshTokenException("Invalid refresh token");
+        }
+        jwtService.removeRefreshToken(refreshToken);
+        String newAccessToken = jwtService.generateToken(username);
+        String newRefreshToken = jwtService.generateRefreshToken(username);
+        return new RefreshResponse(newAccessToken, newRefreshToken);
+    }
+
+    public void logout(String refreshToken) {
+        jwtService.removeRefreshToken(refreshToken);
+    }
+}
