@@ -114,4 +114,22 @@ class AuthenticationServiceTest {
         authenticationService.logout("someToken");
         verify(jwtService).removeRefreshToken("someToken");
     }
+
+    @Test
+    void login_shouldHandlePrincipalNotUserDetails() {
+        Authentication authentication = mock(Authentication.class);
+        // principal bukan UserDetails, misal String
+        when(authentication.getPrincipal()).thenReturn("notAUserDetails");
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(authentication);
+        when(jwtService.generateToken(eq("user"), anyList())).thenReturn("accessToken");
+        when(jwtService.generateRefreshToken("user")).thenReturn("refreshToken");
+
+        RefreshResponse response = authenticationService.login(authRequest);
+
+        assertThat(response.getAccessToken()).isEqualTo("accessToken");
+        assertThat(response.getRefreshToken()).isEqualTo("refreshToken");
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(jwtService).generateToken(eq("user"), anyList());
+    }
 }

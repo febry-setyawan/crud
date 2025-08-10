@@ -11,6 +11,8 @@ import com.example.crud.common.exception.InvalidRefreshTokenException;
 import com.example.crud.feature.auth.dto.AuthRequest;
 import com.example.crud.feature.auth.dto.RefreshResponse;
 
+import org.springframework.security.core.userdetails.UserDetails;
+
 @Service
 public class AuthenticationService {
 
@@ -31,7 +33,7 @@ public class AuthenticationService {
         // Ambil role dari authentication principal
         Object principal = authentication.getPrincipal();
         java.util.List<String> roles = new java.util.ArrayList<>();
-        if (principal instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
+        if (principal instanceof UserDetails userDetails) {
             userDetails.getAuthorities().forEach(a -> roles.add(a.getAuthority()));
         }
         String accessToken = jwtService.generateToken(authRequest.getUsername(), roles);
