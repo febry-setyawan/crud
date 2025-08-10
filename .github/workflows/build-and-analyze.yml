@@ -76,10 +76,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y k6
 
-      # 8. Jalankan k6 performance test di k6 Cloud (test ke localhost, hasil ke cloud)
-      - name: Run k6 performance test (k6 Cloud)
-        env:
-          K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
-        run: |
-          k6 login cloud --token $K6_CLOUD_TOKEN
-          k6 cloud script.js
+      # 8. Jalankan k6 performance test di localhost
+      - name: Run k6 performance test (localhost)
+        run: |          
+          k6 run script.js
+
+      # 9. Jalankan k6 performance test di k6 Cloud (test ke localhost, hasil ke cloud)
+      # Jika mau hasilnya ke k6 Cloud, copy baris di bawah ini
+      # - name: Run k6 performance test (k6 Cloud)
+      #   env:
+      #     K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
+      #   run: |
+      #     k6 login cloud --token $K6_CLOUD_TOKEN          
+      #     k6 cloud script.js
