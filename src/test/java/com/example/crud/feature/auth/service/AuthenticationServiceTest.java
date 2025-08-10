@@ -44,6 +44,8 @@ class AuthenticationServiceTest {
         authRequest = new AuthRequest();
         authRequest.setUsername("user");
         authRequest.setPassword("password");
+        // Stub getRefreshTokenCacheName agar tidak null pada mock JwtService
+        lenient().when(jwtService.getRefreshTokenCacheName()).thenReturn("tokens");
     }
 
     @Test
@@ -74,7 +76,7 @@ class AuthenticationServiceTest {
     @Test
     void refresh_shouldReturnNewTokens_whenRefreshTokenIsValid() {
         when(jwtService.getCacheManager()).thenReturn(cacheManager);
-        when(cacheManager.getCache("refreshTokens")).thenReturn(cache);
+    when(cacheManager.getCache("tokens")).thenReturn(cache);
         when(cache.get("validToken", String.class)).thenReturn("user");
         when(jwtService.generateToken("user")).thenReturn("newAccessToken");
         when(jwtService.generateRefreshToken("user")).thenReturn("newRefreshToken");
@@ -89,7 +91,7 @@ class AuthenticationServiceTest {
     @Test
     void refresh_shouldThrowException_whenRefreshTokenIsInvalid() {
         when(jwtService.getCacheManager()).thenReturn(cacheManager);
-        when(cacheManager.getCache("refreshTokens")).thenReturn(cache);
+    when(cacheManager.getCache("tokens")).thenReturn(cache);
         when(cache.get("invalidToken", String.class)).thenReturn(null);
 
         assertThatThrownBy(() -> authenticationService.refresh("invalidToken"))

@@ -27,7 +27,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("dev")
+@ActiveProfiles("test")
 class AuthControllerIntegrationTest {
         private static final Logger logger = LoggerFactory.getLogger(AuthControllerIntegrationTest.class);
 

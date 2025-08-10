@@ -10,18 +10,48 @@
     "description": "A description for 'features.resilience.user.enabled'"
   },
   {
-    "name": "jwt.secret",
+    "name": "jwt.token.secret",
     "type": "java.lang.String",
-    "description": "A description for 'jwt.secret'"
+    "description": "Secret key for signing JWT access and refresh tokens."
   },
   {
-    "name": "jwt.expirationMs",
-    "type": "java.lang.String",
-    "description": "A description for 'jwt.expirationMs'"
+    "name": "jwt.token.expiration",
+    "type": "java.lang.Long",
+    "description": "JWT access token expiration in milliseconds."
   },
   {
-    "name": "jwt.refreshExpirationMs",
+    "name": "jwt.token.refresh.expiration",
+    "type": "java.lang.Long",
+    "description": "JWT refresh token expiration in milliseconds."
+  },
+  {
+    "name": "cache.names",
     "type": "java.lang.String",
-    "description": "A description for 'jwt.refreshExpirationMs'"
+    "description": "Comma-separated cache names for CaffeineCacheManager."
+  },
+  {
+    "name": "cache.expiry.ms",
+    "type": "java.lang.Long",
+    "description": "Cache expiry in milliseconds. If not set, fallback to jwt.token.expiration."
+  },
+  {
+    "name": "cache.expiry.unit",
+    "type": "java.lang.String",
+    "description": "Cache expiry time unit (e.g. minutes, seconds)."
+  },
+  {
+    "name": "cache.expiry.min",
+    "type": "java.lang.Long",
+    "description": "Minimum cache expiry value in the chosen unit."
+  },
+  {
+    "name": "cache.maxsize",
+    "type": "java.lang.Integer",
+    "description": "Maximum cache size for Caffeine cache."
+  },
+  {
+    "name": "cache.tokens.name",
+    "type": "java.lang.String",
+    "description": "A description for Cache Token name"
   }
 ]}

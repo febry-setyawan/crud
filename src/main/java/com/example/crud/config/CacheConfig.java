@@ -5,26 +5,46 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.concurrent.TimeUnit;
-
 import org.springframework.beans.factory.annotation.Value;
+import java.util.concurrent.TimeUnit;
+import java.util.Arrays;
 
 @Configuration
-public class CacheConfig {
-    @Value("${jwt.expirationMs}")
-    private long jwtExpirationMs;
 
-    @Value("${cache.maxSize:10000}")
+public class CacheConfig {
+    @Value("${cache.names:tokens}")
+    private String cacheNames;
+
+    @Value("${cache.expiry.ms:#{null}}")
+    private Long cacheExpiryMs;
+
+    @Value("${cache.expiry.unit:minutes}")
+    private String cacheExpiryUnit;
+
+    @Value("${cache.expiry.min:1}")
+    private long cacheExpiryMin;
+
+    @Value("${cache.maxsize:10000}")
     private int cacheMaxSize;
+
+    @Value("${jwt.token.expiration:3600000}")
+    private long jwtTokenExpiration;
 
     @Bean
     public CacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager("refreshTokens", "users", "roles");
-        // Konversi jwtExpirationMs (ms) ke menit, minimal 1 menit
-        long expiryMinutes = Math.max(1, jwtExpirationMs / 60000);
+        String[] names = Arrays.stream(cacheNames.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toArray(String[]::new);
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager(names);
+
+        // Hitung expiry dari property cache.expiry.ms, fallback ke jwt.expirationMs jika null
+        long expiryMs = cacheExpiryMs != null ? cacheExpiryMs : jwtTokenExpiration;
+        TimeUnit unit = TimeUnit.valueOf(cacheExpiryUnit.toUpperCase());
+        long expiryValue = Math.max(cacheExpiryMin, unit.convert(expiryMs, TimeUnit.MILLISECONDS));
+
         cacheManager.setCaffeine(Caffeine.newBuilder()
-                .expireAfterWrite(expiryMinutes, TimeUnit.MINUTES)
+                .expireAfterWrite(expiryValue, unit)
                 .maximumSize(cacheMaxSize));
         return cacheManager;
     }

@@ -34,7 +34,7 @@ public class AuthenticationService {
     }
 
     public RefreshResponse refresh(String refreshToken) {
-        String username = jwtService.getCacheManager().getCache("refreshTokens").get(refreshToken, String.class);
+    String username = jwtService.getCacheManager().getCache(jwtService.getRefreshTokenCacheName()).get(refreshToken, String.class);
         if (username == null) {
             throw new InvalidRefreshTokenException("Invalid refresh token");
         }

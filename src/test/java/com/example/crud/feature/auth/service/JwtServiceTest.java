@@ -10,70 +10,21 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.*;
 
 class JwtServiceTest {
-    @Test
-    void generateToken_and_getUsernameFromToken_shouldWork() throws Exception {
-        // Arrange
-        String username = "testuser";
-        String secret = "mySecretKey1234567890";
-        long expiration = 3600000L;
-        JwtService service = new JwtService(mock(CacheManager.class));
-
-        // Use reflection to set private fields
-        java.lang.reflect.Field secretField = JwtService.class.getDeclaredField("jwtSecret");
-        secretField.setAccessible(true);
-        secretField.set(service, secret);
-
-        java.lang.reflect.Field expField = JwtService.class.getDeclaredField("jwtExpirationMs");
-        expField.setAccessible(true);
-        expField.set(service, expiration);
-
-        // Act
-        String token = service.generateToken(username);
-        String extracted = service.getUsernameFromToken(token);
-
-        // Assert
-        assertThat(token).isNotBlank();
-        assertThat(extracted).isEqualTo(username);
-    }
-
-    @Test
-    void generateRefreshToken_shouldNotThrow_whenCacheIsNull() {
-        CacheManager nullCacheManager = mock(CacheManager.class);
-        when(nullCacheManager.getCache("refreshTokens")).thenReturn(null);
-        JwtService service = new JwtService(nullCacheManager);
-        String token = service.generateRefreshToken("user");
-        assertThat(token).isNotBlank();
-    }
-
-    @Test
-    void validateRefreshToken_shouldReturnFalse_whenCacheIsNull() {
-        CacheManager nullCacheManager = mock(CacheManager.class);
-        when(nullCacheManager.getCache("refreshTokens")).thenReturn(null);
-        JwtService service = new JwtService(nullCacheManager);
-        boolean valid = service.validateRefreshToken("token", "user");
-        assertThat(valid).isFalse();
-    }
-
-    @Test
-    void removeRefreshToken_shouldNotThrow_whenCacheIsNull() {
-        CacheManager nullCacheManager = mock(CacheManager.class);
-        when(nullCacheManager.getCache("refreshTokens")).thenReturn(null);
-        JwtService service = new JwtService(nullCacheManager);
-        service.removeRefreshToken("token");
-        // No exception means success
-        assertThatCode(() -> service.removeRefreshToken("token")).doesNotThrowAnyException();
-    }
-
+    
     private JwtService jwtService;
     private CacheManager cacheManager;
     private Cache cache;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         cacheManager = mock(CacheManager.class);
         cache = mock(Cache.class);
-        when(cacheManager.getCache("refreshTokens")).thenReturn(cache);
+        when(cacheManager.getCache("tokens")).thenReturn(cache);
         jwtService = new JwtService(cacheManager);
+        // Set refreshTokenCacheName agar tidak null
+        java.lang.reflect.Field field = JwtService.class.getDeclaredField("refreshTokenCacheName");
+        field.setAccessible(true);
+        field.set(jwtService, "tokens");
     }
 
     @Test
@@ -107,5 +58,72 @@ class JwtServiceTest {
         String refreshToken = "s3cr3t";
         jwtService.removeRefreshToken(refreshToken);
         verify(cache).evict(refreshToken);
+    }
+
+    @Test
+    void generateToken_and_getUsernameFromToken_shouldWork() throws Exception {
+        // Arrange
+        String username = "testuser";
+        String secret = "mySecretKey1234567890";
+        long expiration = 3600000L;
+        JwtService service = new JwtService(mock(CacheManager.class));
+
+        // Use reflection to set private fields
+        java.lang.reflect.Field secretField = JwtService.class.getDeclaredField("jwtSecret");
+        secretField.setAccessible(true);
+        secretField.set(service, secret);
+
+        java.lang.reflect.Field expField = JwtService.class.getDeclaredField("jwtExpirationMs");
+        expField.setAccessible(true);
+        expField.set(service, expiration);
+
+        java.lang.reflect.Field cacheNameField = JwtService.class.getDeclaredField("refreshTokenCacheName");
+        cacheNameField.setAccessible(true);
+        cacheNameField.set(service, "tokens");
+
+        // Act
+        String token = service.generateToken(username);
+        String extracted = service.getUsernameFromToken(token);
+
+        // Assert
+        assertThat(token).isNotBlank();
+        assertThat(extracted).isEqualTo(username);
+    }
+
+    @Test
+    void generateRefreshToken_shouldNotThrow_whenCacheIsNull() throws Exception {
+        CacheManager nullCacheManager = mock(CacheManager.class);
+        when(nullCacheManager.getCache("tokens")).thenReturn(null);
+        JwtService service = new JwtService(nullCacheManager);
+        java.lang.reflect.Field cacheNameField = JwtService.class.getDeclaredField("refreshTokenCacheName");
+        cacheNameField.setAccessible(true);
+        cacheNameField.set(service, "tokens");
+        String token = service.generateRefreshToken("user");
+        assertThat(token).isNotBlank();
+    }
+
+    @Test
+    void validateRefreshToken_shouldReturnFalse_whenCacheIsNull() throws Exception {
+        CacheManager nullCacheManager = mock(CacheManager.class);
+        when(nullCacheManager.getCache("tokens")).thenReturn(null);
+        JwtService service = new JwtService(nullCacheManager);
+        java.lang.reflect.Field cacheNameField = JwtService.class.getDeclaredField("refreshTokenCacheName");
+        cacheNameField.setAccessible(true);
+        cacheNameField.set(service, "tokens");
+        boolean valid = service.validateRefreshToken("s3cr3t", "user");
+        assertThat(valid).isFalse();
+    }
+
+    @Test
+    void removeRefreshToken_shouldNotThrow_whenCacheIsNull() throws Exception {
+        CacheManager nullCacheManager = mock(CacheManager.class);
+        when(nullCacheManager.getCache("tokens")).thenReturn(null);
+        JwtService service = new JwtService(nullCacheManager);
+        java.lang.reflect.Field cacheNameField = JwtService.class.getDeclaredField("refreshTokenCacheName");
+        cacheNameField.setAccessible(true);
+        cacheNameField.set(service, "tokens");
+        service.removeRefreshToken("s3cr3t");
+        // No exception means success
+        assertThatCode(() -> service.removeRefreshToken("s3cr3t")).doesNotThrowAnyException();
     }
 }

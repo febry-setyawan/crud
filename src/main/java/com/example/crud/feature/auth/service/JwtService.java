@@ -1,8 +1,8 @@
+
 package com.example.crud.feature.auth.service;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -13,16 +13,17 @@ import java.util.UUID;
 @Service
 public class JwtService {
 
-    private static final String REFRESH_TOKEN_CACHE = "refreshTokens";
-
-    @Value("${jwt.secret}")
+    @Value("${jwt.token.secret}")
     private String jwtSecret;
 
-    @Value("${jwt.expirationMs}")
+    @Value("${jwt.token.expiration}")
     private long jwtExpirationMs;
 
-    @Value("${jwt.refreshExpirationMs}")
-    private long refreshExpirationMs;
+    @Value("${jwt.token.refresh.expiration}")
+    private long jwtRefreshExpirationMs;
+
+    @Value("${cache.tokens.name:tokens}")
+    private String refreshTokenCacheName;
 
     private final CacheManager cacheManager;
 
@@ -32,6 +33,10 @@ public class JwtService {
 
     public CacheManager getCacheManager() {
         return cacheManager;
+    }
+
+    public String getRefreshTokenCacheName() {
+        return refreshTokenCacheName;
     }
 
     public String generateToken(String username) {
@@ -45,7 +50,7 @@ public class JwtService {
 
     public String generateRefreshToken(String username) {
         String refreshToken = UUID.randomUUID().toString();
-        Cache cache = cacheManager.getCache(REFRESH_TOKEN_CACHE);
+        Cache cache = cacheManager.getCache(refreshTokenCacheName);
         if (cache != null) {
             cache.put(refreshToken, username);
         }
@@ -53,7 +58,7 @@ public class JwtService {
     }
 
     public boolean validateRefreshToken(String refreshToken, String username) {
-        Cache cache = cacheManager.getCache(REFRESH_TOKEN_CACHE);
+        Cache cache = cacheManager.getCache(refreshTokenCacheName);
         if (cache == null)
             return false;
         String cachedUsername = cache.get(refreshToken, String.class);
@@ -61,7 +66,7 @@ public class JwtService {
     }
 
     public void removeRefreshToken(String refreshToken) {
-        Cache cache = cacheManager.getCache(REFRESH_TOKEN_CACHE);
+        Cache cache = cacheManager.getCache(refreshTokenCacheName);
         if (cache != null) {
             cache.evict(refreshToken);
         }
