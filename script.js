@@ -31,7 +31,7 @@ export default function () {
   let loginRes = http.post(LOGIN_URL, JSON.stringify(TEST_USER), {
     headers: { 'Content-Type': 'application/json' },
   });
-  console.log('LOGIN', loginRes.status, loginRes.body, 'payload:', JSON.stringify(TEST_USER));
+  //console.log('LOGIN', loginRes.status, loginRes.body, 'payload:', JSON.stringify(TEST_USER));
   check(loginRes, { 'login status 200': (r) => r.status === 200 });
   let accessToken = loginRes.json('accessToken') || loginRes.json('data.accessToken');
   if (!accessToken) {
@@ -46,7 +46,7 @@ export default function () {
 
   // 2. GET all roles (ambil roleId valid)
   let resRole = http.get(`${BASE_URL}/roles`, { headers: authHeaders });
-  console.log('GET /roles', resRole.status, resRole.body);
+  //console.log('GET /roles', resRole.status, resRole.body);
   check(resRole, { 'GET /roles status 200': (r) => r.status === 200 });
   let roles = resRole.json('content') || resRole.json();
   let roleId = null;
@@ -57,7 +57,7 @@ export default function () {
 
   // 3. GET all users
   let res = http.get(`${BASE_URL}/users`, { headers: authHeaders });
-  console.log('GET /users', res.status, res.body);
+  //console.log('GET /users', res.status, res.body);
   check(res, { 'GET /users status 200': (r) => r.status === 200 });
 
   // 4. POST create user (hanya jika ada roleId valid)
@@ -70,7 +70,7 @@ export default function () {
       roleId: roleId
     });
     let postRes = http.post(`${BASE_URL}/users`, payload, { headers: authHeaders });
-    console.log('POST /users', postRes.status, postRes.body, 'payload:', payload);
+    //console.log('POST /users', postRes.status, postRes.body, 'payload:', payload);
     check(postRes, {
       'POST /users status 201/200': (r) => r.status === 201 || r.status === 200,
     });
@@ -80,7 +80,7 @@ export default function () {
       let userId = postRes.json('id') || postRes.json('data.id');
       if (userId) {
   let getById = http.get(`${BASE_URL}/users/${userId}`, { headers: authHeaders });
-  console.log(`GET /users/${userId}`, getById.status, getById.body);
+  //console.log(`GET /users/${userId}`, getById.status, getById.body);
   check(getById, { 'GET /users/{id} status 200': (r) => r.status === 200 });
       }
     }
@@ -94,7 +94,7 @@ export default function () {
     description: 'Performance test role'
   });
   let postRole = http.post(`${BASE_URL}/roles`, rolePayload, { headers: authHeaders });
-  console.log('POST /roles', postRole.status, postRole.body, 'payload:', rolePayload);
+  //console.log('POST /roles', postRole.status, postRole.body, 'payload:', rolePayload);
   check(postRole, {
     'POST /roles status 201/200': (r) => r.status === 201 || r.status === 200,
   });
@@ -104,7 +104,7 @@ export default function () {
     let roleId = postRole.json('id') || postRole.json('data.id');
     if (roleId) {
       let getRoleById = http.get(`${BASE_URL}/roles/${roleId}`, { headers: authHeaders });
-      console.log(`GET /roles/${roleId}`, getRoleById.status, getRoleById.body);
+      //console.log(`GET /roles/${roleId}`, getRoleById.status, getRoleById.body);
       check(getRoleById, { 'GET /roles/{id} status 200': (r) => r.status === 200 });
     }
   }

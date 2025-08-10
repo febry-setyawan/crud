@@ -49,3 +49,4 @@ mvnw.cmd
 *.jar
 *.war
 *.ear
+*log.txt
