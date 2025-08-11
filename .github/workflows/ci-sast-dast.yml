@@ -20,13 +20,13 @@ jobs:
           java-version: '17'
 
       - name: Build and test
-        run: ./mvnw clean verify
+        run: mvn clean verify
 
       - name: Run OWASP Dependency-Check
-        run: ./mvnw org.owasp:dependency-check-maven:check
+        run: mvn org.owasp:dependency-check-maven:check
 
       - name: Run SpotBugs + FindSecBugs
-        run: ./mvnw com.github.spotbugs:spotbugs-maven-plugin:check
+        run: mvn com.github.spotbugs:spotbugs-maven-plugin:check
 
       - name: Upload SpotBugs report
         uses: actions/upload-artifact@v4
@@ -45,7 +45,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y nikto
 
       - name: Start Spring Boot app
-        run: ./mvnw spring-boot:run &
+        run: mvn spring-boot:run &
         env:
           SPRING_PROFILES_ACTIVE: dev
       - name: Wait for app to be ready
