@@ -1,0 +1,65 @@
+name: CI with SAST and DAST
+
+on:
+  push:
+    branches: [ development, main ]
+  pull_request:
+    branches: [ development, main ]
+
+jobs:
+  build-test-sast:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build and test
+        run: ./mvnw clean verify
+
+      - name: Run OWASP Dependency-Check
+        run: ./mvnw org.owasp:dependency-check-maven:check
+
+      - name: Run SpotBugs + FindSecBugs
+        run: ./mvnw com.github.spotbugs:spotbugs-maven-plugin:check
+
+      - name: Upload SpotBugs report
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotbugs-report
+          path: target/spotbugsXml.xml
+
+  dast:
+    runs-on: ubuntu-latest
+    needs: build-test-sast
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Nikto
+        run: sudo apt-get update && sudo apt-get install -y nikto
+
+      - name: Start Spring Boot app
+        run: ./mvnw spring-boot:run &
+        env:
+          SPRING_PROFILES_ACTIVE: dev
+      - name: Wait for app to be ready
+        run: |
+          for i in {1..30}; do
+            nc -z localhost 8080 && break
+            sleep 5
+          done
+
+      - name: Run Nikto DAST scan
+        run: nikto -h http://localhost:8080 -o nikto-report.html
+
+      - name: Upload Nikto report
+        uses: actions/upload-artifact@v4
+        with:
+          name: nikto-report
+          path: nikto-report.html
