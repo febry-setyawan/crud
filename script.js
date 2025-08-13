@@ -1,22 +1,30 @@
 
+// This is a k6 load testing script that simulates a user journey.
+// It logs in, manages users and roles, and verifies the API responses.
 
 import http from 'k6/http';
 import { sleep, check } from 'k6';
 
+// k6 options for the load test.
 export const options = {
+  // Number of virtual users to simulate.
   vus: 20,
+  // Duration of the test.
   duration: '1m',
 };
 
+// The base URL for the API.
 const BASE_URL = 'http://localhost:8080/api';
+// The login endpoint.
 const LOGIN_URL = `${BASE_URL}/auth/login`;
 
-// Ganti dengan user yang valid di database Anda
+// Test user credentials. Replace with a valid user from your database.
 const TEST_USER = {
   username: 'admin@email.com',
   password: 's3cr3t',
 };
 
+// Generates a random string of a given length.
 function randomString(length) {
   let chars = 'abcdefghijklmnopqrstuvwxyz';
   let str = '';
@@ -27,7 +35,7 @@ function randomString(length) {
 }
 
 export default function () {
-  // 1. Login untuk dapatkan JWT
+  // 1. Login to get a JWT token.
   let loginRes = http.post(LOGIN_URL, JSON.stringify(TEST_USER), {
     headers: { 'Content-Type': 'application/json' },
   });
@@ -44,7 +52,7 @@ export default function () {
   };
 
 
-  // 2. GET all roles (ambil roleId valid)
+  // 2. Get all roles to obtain a valid roleId.
   let resRole = http.get(`${BASE_URL}/roles`, { headers: authHeaders });
   console.log('GET /roles', resRole.status, resRole.body);
   check(resRole, { 'GET /roles status 200': (r) => r.status === 200 });
@@ -55,12 +63,12 @@ export default function () {
     roleId = roles[Math.floor(Math.random() * roles.length)].id;
   }
 
-  // 3. GET all users
+  // 3. Get all users.
   let res = http.get(`${BASE_URL}/users`, { headers: authHeaders });
   console.log('GET /users', res.status, res.body);
   check(res, { 'GET /users status 200': (r) => r.status === 200 });
 
-  // 4. POST create user (hanya jika ada roleId valid)
+  // 4. Create a new user (only if a valid roleId was found).
   if (roleId) {
     let now = Date.now();
     let username = `user_${randomString(5)}_${now}@test.com`;
@@ -75,7 +83,7 @@ export default function () {
       'POST /users status 201/200': (r) => r.status === 201 || r.status === 200,
     });
 
-    // 5. GET user by id (if created)
+    // 5. Get the user by ID (if created successfully).
     if (postRes.status === 201 || postRes.status === 200) {
       let userId = postRes.json('id') || postRes.json('data.id');
       if (userId) {
@@ -86,7 +94,7 @@ export default function () {
     }
   }
 
-  // 6. POST create role
+  // 6. Create a new role.
   let now = Date.now();
   let roleName = `role_${randomString(4)}_${now}`;
   let rolePayload = JSON.stringify({
@@ -99,7 +107,7 @@ export default function () {
     'POST /roles status 201/200': (r) => r.status === 201 || r.status === 200,
   });
 
-  // 7. GET role by id (if created)
+  // 7. Get the role by ID (if created successfully).
   if (postRole.status === 201 || postRole.status === 200) {
     let roleId = postRole.json('id') || postRole.json('data.id');
     if (roleId) {
