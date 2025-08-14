@@ -24,7 +24,7 @@ const TEST_USER = {
   password: 's3cr3t',
 };
 
-// Generates a random string of a given length.
+// Generates a random string of a given length using only lowercase letters.
 function randomString(length) {
   let chars = 'abcdefghijklmnopqrstuvwxyz';
   let str = '';
