@@ -61,11 +61,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponseDto> handleTypeMismatchException(MethodArgumentTypeMismatchException ex,
             HttpServletRequest request) {
+        String requiredTypeName = "unknown";
+        if (ex.getRequiredType() != null) {
+            requiredTypeName = ex.getRequiredType().getSimpleName();
+        }
         ErrorResponseDto errorResponse = new ErrorResponseDto(
                 LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
-                "Invalid parameter: '" + ex.getName() + "' should be of type " + ex.getRequiredType().getSimpleName(),
+                "Invalid parameter: '" + ex.getName() + "' should be of type " + requiredTypeName,
                 request.getRequestURI());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
