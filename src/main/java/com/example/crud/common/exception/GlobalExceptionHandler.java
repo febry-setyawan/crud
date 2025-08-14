@@ -61,7 +61,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponseDto> handleTypeMismatchException(MethodArgumentTypeMismatchException ex,
             HttpServletRequest request) {
-        String requiredTypeName = "unknown";
+        String requiredTypeName = "unspecified type";
         if (ex.getRequiredType() != null) {
             requiredTypeName = ex.getRequiredType().getSimpleName();
         }
