@@ -1,4 +1,6 @@
 name: CI with SAST and DAST
+permissions:
+  contents: read
 
 on:
   push:
